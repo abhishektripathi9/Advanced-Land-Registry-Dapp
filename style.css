@@ -1133,6 +1133,110 @@ html, body {
   color: #000;
 }
 
+/* PW TALK INSTANT HINT SUGGESTIONS BAR */
+.pw-instant-hint-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  max-width: 680px;
+  margin: 6px auto 2px;
+  padding: 0 4px;
+}
+
+.pih-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fbbf24;
+  letter-spacing: 0.3px;
+}
+
+.pih-icon {
+  font-size: 0.85rem;
+  animation: pulse 1.5s infinite;
+}
+
+.pih-chips-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.4) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pih-chips-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.pih-chips-scroll::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.4);
+  border-radius: 9999px;
+}
+
+.pih-chip {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f8fafc;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.pih-chip:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #fbbf24;
+  color: #fbbf24;
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+.pih-chip:active {
+  transform: scale(0.97);
+}
+
+/* Hint Active Pulse Animation when AI finishes speaking */
+.hint-active-pulse {
+  animation: hintPulseGlow 1.8s infinite ease-in-out;
+  border-color: #fbbf24 !important;
+}
+
+@keyframes hintPulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.hint-ready-badge {
+  background: #f59e0b;
+  color: #0f172a;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  margin-left: 4px;
+  letter-spacing: 0.2px;
+}
+
 /* Interim Listening Preview */
 .room-interim-box {
   display: flex;

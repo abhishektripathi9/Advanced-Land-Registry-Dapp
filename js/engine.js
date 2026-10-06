@@ -1309,6 +1309,32 @@ class ConversationEngine {
    * 3. phonetic: Word-by-word pronunciation guide
    * 4. hindi: The Hindi meaning of this answer
    */
+  /**
+   * Helper: Extract the most relevant question sentence from AI's utterance
+   */
+  extractLastQuestionSentence(text) {
+    if (!text) return "";
+    const cleaned = text.replace(/[*_#`]/g, '').trim();
+    const sentences = cleaned.split(/(?<=[.?!])\s+/);
+    for (let i = sentences.length - 1; i >= 0; i--) {
+      const s = sentences[i].trim();
+      if (s.endsWith('?') || /^(what|how|why|where|when|which|could|can|would|do|did|have|are|is|tell me|describe)\b/i.test(s)) {
+        return s;
+      }
+    }
+    return sentences[sentences.length - 1] || cleaned;
+  }
+
+  /**
+   * Guidance card data with sentence formula, phonetics & Hindi meaning
+   * Dynamically analyzes what Aria asked in aiResponse to tell the user:
+   * 1. whatAriaIsAsking: In Hindi, what Aria is asking them
+   * 2. formula: Conversational structure
+   * 3. targetText: Exactly how to answer her in English
+   * 4. phonetic: Word-by-word pronunciation guide
+   * 5. hindi: The Hindi meaning of this answer
+   * 6. quickPills: 2-3 instant 1-tap responses ready to speak
+   */
   generateHowToSpeakGuide(aiResponse, mode, lessonDay = null) {
     const cleanAi = (aiResponse || "").toLowerCase();
     const userMemory = this.memory.data;
@@ -1319,20 +1345,60 @@ class ConversationEngine {
       const lesson = this.lessonsCurriculum.find(l => l.day === parseInt(lessonDay, 10));
       if (lesson && lesson.practiceChallenge) {
         let whatAsked = `आरिया अभ्यास करवा रही है: ${lesson.titleHindi}`;
+        let lessonPills = [
+          lesson.practiceChallenge.targetSentence,
+          "I am focusing on speaking smoothly and with confidence.",
+          "Could we practice one more example together?"
+        ];
         if (parseInt(lessonDay, 10) === 1) {
-          whatAsked = "आरिया पूछ रही है: 'Myself' के बिना अपना नाम, शहर और आज का मूड बताएं!";
+          whatAsked = "आरिया पूछ रही है: 'Myself' के बिना अपना नाम और आज का मूड बताएं!";
+          lessonPills = [
+            `Hello Aria, my name is ${userName}. I am feeling energetic today!`,
+            `Hi! I am ${userName}, excited to build strong English communication skills.`,
+            `Good morning! I am feeling ready to dive into today's session.`
+          ];
         } else if (parseInt(lessonDay, 10) === 2) {
           whatAsked = "आरिया पूछ रही है: आज दिन में आपने क्या किया और शाम को क्या करना पसंद करते हैं?";
+          lessonPills = [
+            "Earlier today, I finished my tasks and practiced spoken English.",
+            "In the evening, I usually unwind and review what I learned.",
+            "I spent my afternoon working productively on key priorities."
+          ];
         } else if (parseInt(lessonDay, 10) === 3) {
           whatAsked = "आरिया पूछ रही है: बिना 'Um' या 'Uh' बोले, शांत रहकर बताएं कि आपका सबसे बड़ा लक्ष्य क्या है?";
+          lessonPills = [
+            "My primary milestone is to speak English fluently and crack top interviews.",
+            "I aim to express my thoughts clearly without any hesitation.",
+            "My biggest goal this year is mastering professional communication."
+          ];
         } else if (parseInt(lessonDay, 10) === 4) {
-          whatAsked = "आरिया पूछ रही है (Ping-Pong): आपका वीकेंड कैसा रहा और रिलैक्स करने के लिए क्या करते हैं? (जवाब देकर वापस सवाल पूछें)";
+          whatAsked = "आरिया पूछ रही है (Ping-Pong): आपका वीकेंड कैसा रहा? (जवाब देकर वापस सवाल पूछें)";
+          lessonPills = [
+            "My weekend was very refreshing! How did you spend your time?",
+            "I relaxed and read an insightful book. What about you, Aria?",
+            "I went outdoors to recharge. What do you enjoy doing on weekends?"
+          ];
         } else if (parseInt(lessonDay, 10) === 5) {
           whatAsked = "आरिया पूछ रही है: 14 घंटे काम करने की बात पर आप विनम्रता से (Diplomatically) असहमति कैसे जताएंगे?";
+          lessonPills = [
+            "I understand that perspective, but sustainable pacing drives superior long-term results.",
+            "I respectfully see it differently, as balance prevents burnout.",
+            "While hard work is vital, focused smart work yields better quality."
+          ];
         } else if (parseInt(lessonDay, 10) === 6) {
           whatAsked = "आरिया पूछ रही है: सीनियर मैनेजर के सामने 45 सेकंड में अपना रोल और अनुभव बताएं!";
+          lessonPills = [
+            "I am a software engineer dedicated to building scalable, user-centric systems.",
+            "I specialize in full-stack architecture with a focus on high efficiency.",
+            "My background blends solid technical depth with collaborative problem-solving."
+          ];
         } else if (parseInt(lessonDay, 10) === 7) {
           whatAsked = "आरिया पूछ रही है (STAR Method): कोई कठिन चुनौती, आपका उठाया कदम और परिणाम बताएं!";
+          lessonPills = [
+            "When facing a critical system bug, I analyzed logs, deployed a hotfix, and saved the release.",
+            "Under tight deadlines, I streamlined tasks and delivered the milestone on time.",
+            "I resolved a team disagreement by organizing an open, data-driven discussion."
+          ];
         }
 
         return {
@@ -1340,12 +1406,13 @@ class ConversationEngine {
           formula: lesson.title,
           targetText: lesson.practiceChallenge.targetSentence,
           phonetic: lesson.practiceChallenge.phoneticGuide,
-          hindi: `हिंदी अर्थ: ${lesson.practiceChallenge.targetSentence}`
+          hindi: `हिंदी अर्थ: ${lesson.practiceChallenge.targetSentence}`,
+          quickPills: lessonPills
         };
       }
     }
 
-    // CASE 1B: If matching the current dynamic conversation starter
+    // CASE 1B: Matching the current dynamic conversation starter
     if (!lessonDay && this.currentActiveStarter) {
       const starterKey = this.currentActiveStarter.text.slice(0, 25).toLowerCase();
       if (cleanAi.includes(starterKey) || cleanAi.includes(this.currentActiveStarter.id)) {
@@ -1354,150 +1421,269 @@ class ConversationEngine {
           formula: "Dynamic Starter + Vocabulary",
           targetText: this.currentActiveStarter.targetText,
           phonetic: this.currentActiveStarter.phonetic,
-          hindi: `हिंदी अर्थ: ${this.currentActiveStarter.hindiMeaning}`
+          hindi: `हिंदी अर्थ: ${this.currentActiveStarter.hindiMeaning}`,
+          quickPills: [
+            this.currentActiveStarter.targetText,
+            `Hello Aria, I am feeling fantastic and eager to communicate in English today!`,
+            `I am ready to speak with confidence and learn modern vocabulary!`
+          ]
         };
       }
     }
 
-    // A. Travel, Culture & Memorable Destinations
-    if (cleanAi.includes("travel") || cleanAi.includes("destination") || cleanAi.includes("historical places") || cleanAi.includes("culture")) {
+    // 1. Projects, Coding, Software, Bug, Architecture
+    if (cleanAi.includes("project") || cleanAi.includes("bug") || cleanAi.includes("code") || cleanAi.includes("software") || cleanAi.includes("technical") || cleanAi.includes("framework") || cleanAi.includes("programming") || cleanAi.includes("architecture")) {
       return {
-        whatAriaIsAsking: "आरिया पूछ रही है: 'यात्रा, ऐतिहासिक जगहों या संस्कृति के बारे में आपका क्या विचार है?'",
-        formula: "Enriching travel + Cultural perspectives",
-        targetText: "Traveling allows us to explore diverse cultures and gain fresh, inspiring perspectives.",
-        phonetic: "TRAV-uh-ling uh-LOWZ us too ek-SPLOR dy-VURS KUL-churz and gayn fresh, in-SPY-ring per-SPEK-tivz.",
-        hindi: "यात्रा करने से हमें विभिन्न संस्कृतियों को जानने और नए प्रेरक दृष्टिकोण प्राप्त करने का अवसर मिलता है।"
+        whatAriaIsAsking: "आरिया आपके प्रोजेक्ट, कोडिंग अनुभव या किसी कठिन टेक्निकल समस्या के बारे में पूछ रही है।",
+        formula: "Context (Recent project) + Challenge + Action taken + Positive outcome",
+        targetText: "In my recent project, I built a scalable web application and optimized API queries for seamless user experience.",
+        phonetic: "In my REE-sent PROJ-ekt, eye bilt uh SKAY-luh-bul web ap-lih-KAY-shun and AHP-tih-myzd AY-pee-eye KWEE-reez fur SEEM-lis YOO-zur ek-SPEER-ee-ens.",
+        hindi: "मेरे हालिया प्रोजेक्ट में मैंने एक स्केलेबल वेब ऐप्लिकेशन बनाई और बेहतरीन यूज़र एक्सपीरियंस के लिए एपीआई क्वेरीज़ ऑप्टिमाइज़ कीं।",
+        quickPills: [
+          "I recently built a modern web application with full responsiveness.",
+          "I debugged a complex state synchronization issue using console profiling.",
+          "Could you suggest the best architectural approach for scalable apps?"
+        ]
       };
     }
 
-    // B. Morning Routine & Priorities
-    if (cleanAi.includes("morning routine") || cleanAi.includes("priorities")) {
+    // 2. Deadlines, Pressure, Stress, Complex Challenges
+    if (cleanAi.includes("deadline") || cleanAi.includes("pressure") || cleanAi.includes("challenge") || cleanAi.includes("difficult") || cleanAi.includes("obstacle") || cleanAi.includes("tough situation")) {
       return {
-        whatAriaIsAsking: "आरिया पूछ रही है: 'आज आपकी सुबह कैसी रही और आपने दिन की क्या योजना बनाई?'",
-        formula: "Productive morning + Planned tasks",
-        targetText: "My morning was very productive and refreshing. I planned my tasks and practiced speaking English.",
-        phonetic: "My MOR-ning wuz VER-ee pruh-DUK-tiv and ree-FRESH-ing. Eye pland my tasks and PRAK-tist SPEE-king ING-glish.",
-        hindi: "मेरी सुबह बहुत उपयोगी और तरोताजा रही। मैंने अपने कामों की योजना बनाई और अंग्रेजी बोलने का अभ्यास किया।"
+        whatAriaIsAsking: "आरिया पूछ रही है: 'कठिन डेडलाइन, दबाव या बड़ी चुनौती के समय आप काम कैसे संभालते हैं?'",
+        formula: "Calm Mindset + Prioritization + Structured Execution + Timely Delivery",
+        targetText: "When faced with tight deadlines, I prioritize critical deliverables and keep communication proactive and transparent.",
+        phonetic: "Wen fayst with tyte DED-lynez, eye pry-OR-ih-tyze KRIT-ih-kul dih-LIV-er-uh-bulz and keep kuh-myoo-nih-KAY-shun proh-AK-tiv and trans-PAIR-unt.",
+        hindi: "कठिन डेडलाइन पर मैं जरूरी कामों को प्राथमिकता देता हूँ और टीम के साथ सक्रिय व पारदर्शी संवाद बनाए रखता हूँ।",
+        quickPills: [
+          "I break heavy tasks into clear daily milestones to stay on schedule.",
+          "Remaining calm and focused under pressure helps me deliver high quality.",
+          "How do you recommend handling unexpected blockers during a sprint?"
+        ]
       };
     }
 
-    // C. Chai, Coffee, Tea & Unwind
-    if (cleanAi.includes("tea or coffee") || cleanAi.includes("unwind and recharge") || cleanAi.includes("cup of tea")) {
+    // 3. Career Milestone, Job Interviews, Placement, Ambition
+    if (cleanAi.includes("interview") || cleanAi.includes("placement") || cleanAi.includes("career") || cleanAi.includes("milestone") || cleanAi.includes("accomplish") || cleanAi.includes("job") || cleanAi.includes("aspire") || cleanAi.includes("goal")) {
       return {
-        whatAriaIsAsking: "आरिया पूछ रही है: 'रिलैक्स करने और ऊर्जा पाने के लिए आप गर्म चाय पसंद करते हैं या कॉफ़ी?'",
-        formula: "Preference (hot tea) + Unwind benefit",
-        targetText: "I definitely prefer having a hot cup of tea to unwind and stay energetic throughout the day.",
-        phonetic: "Eye DEF-ih-nit-lee pree-FUR HAV-ing uh hot kup uv tee too un-WYND and stay en-er-JET-ik throo-OWT thuh day.",
-        hindi: "मैं दिनभर ऊर्जावान बने रहने और तनावमुक्त होने के लिए निश्चित रूप से गर्म चाय पीना पसंद करता हूँ।"
+        whatAriaIsAsking: "आरिया आपके करियर के मील के पत्थर, इंटरव्यू की तैयारी या बड़े लक्ष्यों के बारे में पूछ रही है।",
+        formula: "Core Milestone + Relentless Preparation + Long-term Impact",
+        targetText: "My primary milestone is to achieve fluent English communication and excel in high-impact technical interviews.",
+        phonetic: "My PRY-mair-ee MYLE-stone iz too uh-CHEEV FLOO-ent ING-glish kuh-myoo-nih-KAY-shun and ek-SEL in high-IM-pakt TEK-nih-kul IN-ter-vyooz.",
+        hindi: "मेरा प्राथमिक लक्ष्य धाराप्रवाह इंग्लिश बातचीत में महारत हासिल करना और बड़े टेक्निकल इंटरव्यूज में सफल होना है।",
+        quickPills: [
+          "I am rigorously preparing for software engineering placements.",
+          "My aim is to express complex technical concepts with complete clarity.",
+          "What advice would you give for making an outstanding first impression?"
+        ]
       };
     }
 
-    // D. Career Milestone & Ambition
-    if (cleanAi.includes("milestone") || cleanAi.includes("accomplish this year") || cleanAi.includes("career goals")) {
+    // 4. Teamwork, Conflict Resolution, Leadership, Collaboration
+    if (cleanAi.includes("team") || cleanAi.includes("colleague") || cleanAi.includes("conflict") || cleanAi.includes("disagreement") || cleanAi.includes("collaborat") || cleanAi.includes("manager") || cleanAi.includes("leadership")) {
       return {
-        whatAriaIsAsking: "आरिया पूछ रही है: 'इस साल आपका सबसे बड़ा करियर लक्ष्य या मील का पत्थर क्या है?'",
-        formula: "Primary milestone + Fluent English + High-impact job",
-        targetText: "My primary milestone this year is to become fluent in English and secure a high-impact job role.",
-        phonetic: "My PRY-mair-ee MYLE-stone this yeer iz too bee-KUM FLOO-ent in ING-glish and sih-KYOOR uh high-IM-pakt jahb rohl.",
-        hindi: "इस साल मेरा मुख्य मील का पत्थर अंग्रेजी में धाराप्रवाह बनना और एक बेहतरीन नौकरी हासिल करना है।"
+        whatAriaIsAsking: "आरिया टीमवर्क, आपसी तालमेल या मतभेद सुलझाने के आपके तरीके के बारे में पूछ रही है।",
+        formula: "Active Listening + Mutual Respect + Finding Common Ground",
+        targetText: "I value collaborative teamwork, active listening, and reaching consensus through open, empathetic dialogue.",
+        phonetic: "Eye VAL-yoo kuh-LAB-uh-ruh-tiv TEEM-wurk, AK-tiv LIS-ning, and REE-ching kun-SEN-sus throo OH-pen, em-puh-THET-ik DY-uh-lahg.",
+        hindi: "मैं टीमवर्क, ध्यानपूर्वक सुनने और खुले, सहानुभूतिपूर्ण संवाद के माध्यम से सहमति बनाने को महत्व देता हूँ।",
+        quickPills: [
+          "I believe open and respectful communication resolves most team friction.",
+          "I enjoy collaborating closely with people from diverse perspectives.",
+          "How do you suggest navigating differing architectural opinions in a team?"
+        ]
       };
     }
 
-    // E. Strength & Interview
-    if (cleanAi.includes("personal strength") || cleanAi.includes("greatest strength")) {
+    // 5. Daily Routine, Morning, Breakfast, Planning
+    if (cleanAi.includes("morning") || cleanAi.includes("routine") || cleanAi.includes("start your day") || cleanAi.includes("breakfast") || cleanAi.includes("plans for today") || cleanAi.includes("yesterday") || cleanAi.includes("earlier today")) {
       return {
-        whatAriaIsAsking: "आरिया पूछ रही है: 'आपकी सबसे बड़ी व्यक्तिगत खूबी या ताकत क्या है?'",
-        formula: "Meticulous attention + Resilience under challenges",
-        targetText: "My greatest strength is my meticulous attention to detail and my resilience when solving complex challenges.",
-        phonetic: "My GRAY-tist strength iz my muh-TIK-yuh-lus uh-TEN-shun too DEE-tayl and my rih-ZIL-yunce wen SAHL-ving KOM-pleks CHAL-en-jez.",
-        hindi: "मेरी सबसे बड़ी ताकत बारीकियों पर मेरा सूक्ष्म ध्यान और कठिन चुनौतियों को हल करने में मेरी अडिग लगन है।"
+        whatAriaIsAsking: "आरिया पूछ रही है: 'आज आपकी सुबह कैसी रही और आपने अपने दिन की क्या योजना बनाई?'",
+        formula: "Morning Activity + High Productivity + Positive Energy",
+        targetText: "My morning was productive. I outlined my priorities for the day and practiced spoken English with focus.",
+        phonetic: "My MOR-ning wuz pruh-DUK-tiv. Eye OWT-lynd my pry-OR-ih-teez fur thuh day and PRAK-tist SPOH-kun ING-glish with FOH-kus.",
+        hindi: "मेरी सुबह बहुत उपयोगी रही। मैंने आज के मुख्य कामों की योजना बनाई और एकाग्रता के साथ इंग्लिश बोलने का अभ्यास किया।",
+        quickPills: [
+          "I started my morning early and organized all my key priorities.",
+          "Earlier today, I completed my coding tasks and spent time learning.",
+          "How does your daily routine usually look, Aria?"
+        ]
       };
     }
 
-    // F. Name & How Feeling
-    if (cleanAi.includes("what is your name") || cleanAi.includes("how are you feeling") || cleanAi.includes("feeling today") || cleanAi.includes("name and")) {
+    // 6. Chai, Coffee, Evening Unwind, Recharge
+    if (cleanAi.includes("tea or coffee") || cleanAi.includes("unwind") || cleanAi.includes("recharge") || cleanAi.includes("cup of tea") || cleanAi.includes("chai") || cleanAi.includes("coffee") || cleanAi.includes("relax")) {
       return {
-        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपका नाम क्या है और आज आप कैसा महसूस कर रहे हैं?'",
-        formula: "Greeting + Name + Location + Feeling",
-        targetText: `Hello Aria, my name is ${userName}. I am feeling very positive and energetic today.`,
-        phonetic: `Huh-LOH AH-ree-uh, my name iz ${userName}. Eye am FEEL-ing VER-ee PAH-zih-tiv and en-er-JET-ik too-day.`,
-        hindi: `नमस्ते आरिया, मेरा नाम ${userName} है। आज मैं बहुत सकारात्मक और ऊर्जावान महसूस कर रहा हूँ।`
+        whatAriaIsAsking: "आरिया पूछ रही है: 'रिलैक्स करने और तरोताजा होने के लिए आप चाय पसंद करते हैं या कॉफ़ी?'",
+        formula: "Clear Beverage Choice + Refreshing Benefit + Evening Habit",
+        targetText: "I definitely prefer having a hot cup of tea to unwind and stay refreshed throughout the evening.",
+        phonetic: "Eye DEF-ih-nit-lee pree-FUR HAV-ing uh hot kup uv tee too un-WYND and stay ree-FRESH-t throo-OWT thuh EEV-ning.",
+        hindi: "मैं शाम को रिलैक्स रहने और तरोताजा महसूस करने के लिए निश्चित रूप से गर्म चाय पीना पसंद करता हूँ।",
+        quickPills: [
+          "A hot cup of tea always helps me recharge after intense work.",
+          "I enjoy coffee when I need sharp focus for coding late at night.",
+          "What is your favorite way to unwind after a productive day?"
+        ]
       };
     }
 
-    // B. Food, Tea, Coffee, Breakfast
-    if (cleanAi.includes("food") || cleanAi.includes("fruit") || cleanAi.includes("eat") || cleanAi.includes("tea") || cleanAi.includes("coffee") || cleanAi.includes("breakfast") || cleanAi.includes("drink")) {
+    // 7. Hobbies, Free time, Weekend, Music, Books
+    if (cleanAi.includes("hobby") || cleanAi.includes("free time") || cleanAi.includes("weekend") || cleanAi.includes("music") || cleanAi.includes("book") || cleanAi.includes("podcast") || cleanAi.includes("movie")) {
       return {
-        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपको खाने-पीने में क्या पसंद है या सुबह नाश्ते में क्या लेते हैं?'",
-        formula: "Preference (I really like / prefer) + Item + Time",
-        targetText: "I really enjoy having a hot cup of tea and light breakfast in the morning.",
-        phonetic: "Eye REE-lee en-JOY HAV-ing uh hot kup uv tee and lyte BREK-fust in thuh MOR-ning.",
-        hindi: "मुझे सुबह गर्म चाय पीना और हल्का नाश्ता करना बहुत पसंद है।"
+        whatAriaIsAsking: "आरिया पूछ रही है: 'खाली समय या वीकेंड पर आप क्या करना पसंद करते हैं?'",
+        formula: "Passionate Activity + Learning Angle + Balanced Lifestyle",
+        targetText: "In my free time, I love listening to instrumental music, reading insightful books, and exploring new technologies.",
+        phonetic: "In my free tyme, eye luv LIS-ning too in-struh-MEN-tul MYOO-zik, REE-ding in-SYTE-ful books, and ek-SPLOR-ing noo tek-NAHL-uh-jeez.",
+        hindi: "खाली समय में मुझे मधुर संगीत सुनना, विचारोत्तेजक किताबें पढ़ना और नई तकनीकों को एक्सप्लोर करना बहुत पसंद है।",
+        quickPills: [
+          "I love listening to music and taking quiet walks outdoors.",
+          "Reading thought-provoking books helps me broaden my perspective.",
+          "What hobbies or topics do you find most fascinating?"
+        ]
       };
     }
 
-    // C. Routine, Yesterday, What did you do
-    if (cleanAi.includes("what did you do") || cleanAi.includes("yesterday") || cleanAi.includes("earlier today") || cleanAi.includes("afternoon")) {
+    // 8. Personal Strength, Proud Moments, Qualities
+    if (cleanAi.includes("strength") || cleanAi.includes("greatest strength") || cleanAi.includes("proud") || cleanAi.includes("achievement") || cleanAi.includes("quality")) {
       return {
-        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आज दिन में आपने क्या किया, या कल आपने क्या काम किया था?'",
-        formula: "Past Marker (Earlier today / Yesterday) + Past Verb (finished / went) + Details",
-        targetText: "Earlier today, I finished all my daily tasks and practiced my English speaking.",
-        phonetic: "UR-lee-ur too-day, eye FIN-isht all my DAY-lee tasks and PRAK-tist my ING-glish SPEE-king.",
-        hindi: "आज दिन में मैंने अपने सभी काम पूरे किए और अपनी इंग्लिश बोलने का अभ्यास किया।"
+        whatAriaIsAsking: "आरिया आपकी सबसे बड़ी ताकत या किसी उपलब्धि के बारे में पूछ रही है।",
+        formula: "Key Characteristic + Concrete Evidence + Professional Benefit",
+        targetText: "My greatest strength is my persistence in learning complex concepts and adapting quickly to new challenges.",
+        phonetic: "My GRAY-tist strength iz my per-SIS-tens in LUR-ning KOM-pleks KAHN-septs and uh-DAP-ting KWIK-lee too noo CHAL-en-jez.",
+        hindi: "मेरी सबसे बड़ी ताकत जटिल विषयों को गहराई से सीखने में मेरी निरंतरता और नई चुनौतियों के अनुसार तेजी से ढलना है।",
+        quickPills: [
+          "My greatest strength is staying disciplined and solving problems calmly.",
+          "I take pride in my attention to detail and reliable follow-through.",
+          "How can one highlight their strengths without sounding arrogant?"
+        ]
       };
     }
 
-    // D. Hobby, Free time, Weekend, Music, Unwind
-    if (cleanAi.includes("hobby") || cleanAi.includes("free time") || cleanAi.includes("weekend") || cleanAi.includes("music") || cleanAi.includes("unwind") || cleanAi.includes("movie")) {
+    // 9. English Hesitation, Fluency, Confidence
+    if (cleanAi.includes("hesitation") || cleanAi.includes("confidence") || cleanAi.includes("fluency") || cleanAi.includes("speak english") || cleanAi.includes("tuti") || cleanAi.includes("fear") || cleanAi.includes("nervous")) {
       return {
-        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपको खाली समय में क्या करना पसंद है और वीकेंड पर कैसे रिलैक्स करते हैं?'",
-        formula: "Activity + Passion (I love / enjoy) + Reason",
-        targetText: "In my free time, I love listening to soothing music and reading inspiring books.",
-        phonetic: "In my free tyme, eye luv LIS-ning too SOO-thing MYOO-zik and REE-ding in-SPY-ring books.",
-        hindi: "खाली समय में मुझे मधुर संगीत सुनना और प्रेरणादायक किताबें पढ़ना बहुत पसंद है।"
+        whatAriaIsAsking: "आरिया इंग्लिश बोलने में झिझक या आत्मविश्वास बढ़ाने के बारे में चर्चा कर रही है।",
+        formula: "Acknowledging Real Effort + Embracing Practice + Rapid Progress",
+        targetText: "I used to feel nervous, but practicing daily conversations with you is building my real confidence.",
+        phonetic: "Eye yoozd too feel NUR-vus, but PRAK-tih-sing DAY-lee kahn-ver-SAY-shunz with yoo iz BIL-ding my reel KAHN-fih-dens.",
+        hindi: "पहले मुझे थोड़ी झिझक होती थी, लेकिन आपके साथ रोजाना बातचीत का अभ्यास करने से मेरा आत्मविश्वास तेजी से बढ़ रहा है।",
+        quickPills: [
+          "Daily practice helps me overcome hesitation step by step.",
+          "I am focusing on clear thoughts rather than worrying about mistakes.",
+          "What is the quickest tip to eliminate filler words like 'um' and 'uh'?"
+        ]
       };
     }
 
-    // E. City, Hometown, Where you live
-    if (cleanAi.includes("city") || cleanAi.includes("hometown") || cleanAi.includes("where do you live") || cleanAi.includes("where you live")) {
+    // 10. City, Hometown, Travel, Culture
+    if (cleanAi.includes("city") || cleanAi.includes("hometown") || cleanAi.includes("where do you live") || cleanAi.includes("travel") || cleanAi.includes("culture") || cleanAi.includes("destination")) {
       return {
-        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आप किस शहर से हैं और अपने शहर के बारे में कुछ बताएं?'",
-        formula: "Origin (I am from / live in) + City Quality (famous for)",
-        targetText: "I live in a peaceful city which is famous for its rich culture and delicious food.",
-        phonetic: "Eye liv in uh PEES-ful SIT-ee witch iz FAY-mus fur its rich KUL-chur and dih-LISH-us food.",
-        hindi: "मैं एक शांत शहर में रहता हूँ जो अपनी समृद्ध संस्कृति और स्वादिष्ट भोजन के लिए प्रसिद्ध है।"
+        whatAriaIsAsking: "आरिया आपके शहर, संस्कृति या यात्रा के अनुभवों के बारे में पूछ रही है।",
+        formula: "Location + Cultural Richness + Personal Warmth",
+        targetText: "I live in a vibrant place known for its warm hospitality, diverse heritage, and delicious food.",
+        phonetic: "Eye liv in uh VY-brunt playss nohn fur its wawrm hahs-pih-TAL-ih-tee, dy-VURS HAIR-ih-tij, and dih-LISH-us food.",
+        hindi: "मैं एक जीवंत जगह पर रहता हूँ जो अपनी मेहमाननवाज़ी, समृद्ध विरासत और स्वादिष्ट व्यंजनों के लिए जानी जाती है।",
+        quickPills: [
+          "My hometown has a rich cultural heritage and a peaceful environment.",
+          "Traveling allows us to gain fresh perspectives on different ways of life.",
+          "Have you ever experienced the diverse traditions of Indian cities?"
+        ]
       };
     }
 
-    // F. Studies, Work, Career, Goals
-    if (cleanAi.includes("study") || cleanAi.includes("work") || cleanAi.includes("goals") || cleanAi.includes("career") || cleanAi.includes("tasks are you focusing")) {
+    // 11. Greeting & How are you feeling
+    if (cleanAi.includes("what is your name") || cleanAi.includes("how are you feeling") || cleanAi.includes("feeling today") || cleanAi.includes("welcome")) {
       return {
-        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपकी पढ़ाई, नौकरी या आजकल के मुख्य लक्ष्य क्या हैं?'",
-        formula: "Current focus (Currently, I am focusing on) + Objective",
-        targetText: "Currently, I am focusing on my studies and improving my spoken English communication.",
-        phonetic: "KUR-ent-lee, eye am FOH-kus-ing on my STUD-eez and im-PROO-ving my SPOH-kun ING-glish.",
-        hindi: "वर्तमान में, मैं अपनी पढ़ाई और इंग्लिश बातचीत सुधारने पर ध्यान दे रहा हूँ।"
+        whatAriaIsAsking: `आरिया पूछ रही है: '${userName}, आज आपका मूड कैसा है और आप कैसा महसूस कर रहे हैं?'`,
+        formula: "Enthusiastic Greeting + Name + Positive Mood + Ready to Speak",
+        targetText: `Hello Aria, I am ${userName}. I am feeling energetic and excited to practice speaking English with you.`,
+        phonetic: `Huh-LOH AH-ree-uh, eye am ${userName}. Eye am FEEL-ing en-er-JET-ik and ek-SY-tid too PRAK-tis SPEE-king ING-glish with yoo.`,
+        hindi: `नमस्ते आरिया, मैं ${userName} हूँ। आज मैं ऊर्जावान महसूस कर रहा हूँ और आपके साथ इंग्लिश बोलने के लिए उत्साहित हूँ।`,
+        quickPills: [
+          `Hello Aria! I am feeling very positive and ready to speak.`,
+          `I am doing great today, looking forward to our session!`,
+          `How are you feeling today, Aria?`
+        ]
       };
     }
 
-    // G. Interview, Challenge, Obstacle
-    if (cleanAi.includes("challenge") || cleanAi.includes("obstacle") || cleanAi.includes("difficult") || cleanAi.includes("interview")) {
+    // 12. Comparison / Preference (Startup vs MNC, A vs B)
+    if (cleanAi.includes("prefer") || cleanAi.includes("would you rather") || cleanAi.includes("or do you prefer")) {
       return {
-        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपने किसी कठिन चुनौती का सामना कैसे किया और उसे कैसे हल किया?'",
-        formula: "Situation + Strategic Action + Positive Outcome",
-        targetText: "When faced with a tough deadline, I prioritized key tasks and delivered successfully on time.",
-        phonetic: "Wen fayst with uh tuff DED-lyne, eye pry-OR-ih-tyzed kee tasks and dih-LIV-erd suk-SES-fuh-lee on tyme.",
-        hindi: "कठिन समय सीमा का सामना करते हुए, मैंने मुख्य कार्यों को प्राथमिकता दी और समय पर पूरा किया।"
+        whatAriaIsAsking: "आरिया आपकी पसंद और प्राथमिकताओं के बारे में राय पूछ रही है।",
+        formula: "Decisive Choice + Clear Justification + Balanced View",
+        targetText: "I would definitely choose a high-growth environment where I can take strong ownership and learn rapidly.",
+        phonetic: "Eye wood DEF-ih-nit-lee chooz uh high-GROHTH en-VY-run-ment wair eye kan tayk strawng OH-ner-ship and lurn RAP-id-lee.",
+        hindi: "मैं निश्चित रूप से ऐसे गतिशील माहौल को चुनूंगा जहाँ मुझे ज़िम्मेदारी लेने और तेजी से सीखने का अवसर मिले।",
+        quickPills: [
+          "I value rapid learning and high ownership above everything.",
+          "I appreciate structured processes and long-term stability.",
+          "In your view, what environment fosters the fastest professional growth?"
+        ]
       };
     }
 
-    // Fallback General Question
+    // UNIVERSAL QUESTION PARSER: For any dynamic question asked by Aria
+    const lastQuestion = this.extractLastQuestionSentence(cleanAi);
+    let askingSummary = `आरिया पूछ रही है: "${lastQuestion}"`;
+    let smartTarget = "That is a thoughtful question. In my perspective, consistent dedication and clear communication make all the difference.";
+    let smartPhonetic = "That iz uh THAWT-ful KWES-chun. In my per-SPEK-tiv, kun-SIS-tent ded-ih-KAY-shun and kleer kuh-myoo-nih-KAY-shun mayk awl thuh DIF-er-ens.";
+    let smartHindi = "यह एक विचारणीय सवाल है। मेरे दृष्टिकोण से, निरंतर समर्पण और स्पष्ट संवाद सबसे बड़ा बदलाव लाते हैं।";
+    let smartPills = [
+      "I completely agree with that perspective.",
+      "In my experience, consistent practice brings great results.",
+      "Could you share your thoughts on this as well?"
+    ];
+
+    if (/^how\b/i.test(lastQuestion)) {
+      askingSummary = `आरिया पूछ रही है कि आप यह काम कैसे करते हैं: "${lastQuestion}"`;
+      smartTarget = "I usually approach it by analyzing the situation, breaking it into simple steps, and taking steady action.";
+      smartPhonetic = "Eye YOO-zhoo-uh-lee uh-PROHCH it by AN-uh-ly-zing thuh sih-choo-AY-shun, BRAY-king it IN-too SIM-pul steps, and TAY-king STED-ee AK-shun.";
+      smartHindi = "मैं आमतौर पर स्थिति का विश्लेषण करके, उसे छोटे चरणों में बांटकर और लगातार कदम उठाकर काम करता हूँ।";
+      smartPills = [
+        "I break it down into simple, manageable steps.",
+        "I stay focused on the end goal and execute steadily.",
+        "How would you approach this challenge, Aria?"
+      ];
+    } else if (/^why\b/i.test(lastQuestion)) {
+      askingSummary = `आरिया कारण या प्रेरणा पूछ रही है: "${lastQuestion}"`;
+      smartTarget = "The main reason is that it drives meaningful self-improvement and allows me to create valuable outcomes.";
+      smartPhonetic = "Thuh mayn REE-zun iz that it dryvz MEEN-ing-ful self-im-PROOV-ment and uh-LOWZ mee too kree-AYT VAL-yoo-uh-bul OWT-kumz.";
+      smartHindi = "मुख्य कारण यह है कि यह आत्म-सुधार को बढ़ावा देता है और मुझे मूल्यवान परिणाम हासिल करने में मदद करता है।";
+      smartPills = [
+        "Because it challenges me to grow and improve every single day.",
+        "It aligns directly with my long-term career vision.",
+        "What motivated you to explore this topic?"
+      ];
+    } else if (/^(what|which)\b/i.test(lastQuestion)) {
+      askingSummary = `आरिया आपकी राय या विशिष्ट पसंद पूछ रही है: "${lastQuestion}"`;
+      smartTarget = "I would highlight that continuous curiosity and structured execution are the most essential factors.";
+      smartPhonetic = "Eye wood HY-lyte that kun-TIN-yoo-us kyoor-ee-AH-sih-tee and STRUK-churd ek-seh-KYOO-shun ar thuh mohst eh-SEN-shul FAK-turz.";
+      smartHindi = "मैं यह रेखांकित करूँगा कि निरंतर जिज्ञासा और व्यवस्थित क्रियान्वयन सबसे आवश्यक कारक हैं।";
+      smartPills = [
+        "I believe that consistent curiosity is the biggest factor.",
+        "For me, clear planning and steady discipline matter most.",
+        "What would be your top recommendation for this?"
+      ];
+    } else if (/^(do|did|have|are|is|can|could|would)\b/i.test(lastQuestion)) {
+      askingSummary = `आरिया आपकी सहमति या प्रत्यक्ष अनुभव पूछ रही है: "${lastQuestion}"`;
+      smartTarget = "Yes, absolutely! I have experienced that firsthand, and it taught me valuable lessons.";
+      smartPhonetic = "Yes, ab-soh-LOOT-lee! Eye hav ek-SPEER-ee-enst that FURST-hand, and it tawt mee VAL-yoo-uh-bul LES-unz.";
+      smartHindi = "हाँ, बिल्कुल! मैंने इसे स्वयं अनुभव किया है, और इससे मुझे बहुत कुछ सीखने को मिला।";
+      smartPills = [
+        "Yes, absolutely! I strongly agree with that.",
+        "To be honest, I am still exploring that area.",
+        "Have you encountered a similar situation recently?"
+      ];
+    }
+
     return {
-      whatAriaIsAsking: "आरिया आपसे पूछ रही है: अपने विचार साझा करें और इस बातचीत को आगे बढ़ाएं।",
-      formula: "Clear Direct Answer + Enthusiastic Follow-up",
-      targetText: "To be completely honest, I agree with you and would love to practice this further.",
-      phonetic: "Too bee kum-PLEET-lee ON-ist, eye uh-GREE with yoo and wood luv too PRAK-tis this FUR-ther.",
-      hindi: "पूरी ईमानदारी से कहूँ तो, मैं आपकी बात से सहमत हूँ और इसका और अभ्यास करना चाहूँगा।"
+      whatAriaIsAsking: askingSummary,
+      formula: "Direct Perspective + Structured Justification + Conversational Question",
+      targetText: smartTarget,
+      phonetic: smartPhonetic,
+      hindi: smartHindi,
+      quickPills: smartPills
     };
   }
 

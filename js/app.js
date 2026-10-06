@@ -120,6 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
     rhHindiMeaning: document.getElementById('rh-hindi-meaning'),
     rhListenBtn: document.getElementById('rh-listen-btn'),
     rhSpeakNowBtn: document.getElementById('rh-speak-now-btn'),
+    pwInstantHintBar: document.getElementById('pw-instant-hint-bar'),
+    pihChipsScroll: document.getElementById('pih-chips-scroll'),
 
     roomInterimBox: document.getElementById('room-interim-box'),
     roomInterimText: document.getElementById('room-interim-text'),
@@ -211,7 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     onAIEndSpeaking: () => {
       dom.hologramPulseRipple.classList.remove('speaking');
-      dom.ariaSpeakingStatus.textContent = 'Your turn! Tap mic to speak.';
+      dom.ariaSpeakingStatus.textContent = '💡 Hint AI Ready: Read hint or tap quick answer below!';
+      activateHintAIAfterSpeech();
     }
   });
 
@@ -880,7 +883,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function startTalkRoomSession() {
     dom.roomChatStream.innerHTML = '';
     dom.roomMistakeDrawer?.classList.add('hidden');
-    dom.roomHintDrawer?.classList.add('hidden');
+    dom.roomHintDrawer?.classList.remove('hidden');
 
     let starterText = "";
     let starterHindi = "";
@@ -1079,6 +1082,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Update Show Hint Content
   function updateRoomHints(aiMessage, lessonDay = null) {
     const guide = engine.generateHowToSpeakGuide(aiMessage, state.mode, lessonDay);
+    state.currentHintGuide = guide;
 
     if (dom.rhAriaAskingText) {
       dom.rhAriaAskingText.textContent = guide.whatAriaIsAsking || "आरिया के सवाल का सीधा जवाब नीचे दिया गया है:";
@@ -1099,8 +1103,61 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dom.rhSpeakNowBtn) {
       dom.rhSpeakNowBtn.onclick = () => {
         handleUserTurn(guide.targetText);
-        dom.roomHintDrawer?.classList.add('hidden');
       };
+    }
+
+    // Populate Quick Suggestion Chips directly above mic (PW Talk Style)
+    if (dom.pihChipsScroll) {
+      dom.pihChipsScroll.innerHTML = '';
+      const pills = (guide.quickPills && guide.quickPills.length > 0) ? guide.quickPills : [guide.targetText];
+      pills.forEach((pillText) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'pih-chip';
+        chip.innerHTML = `<span>💬</span> <span>${escapeHtml(pillText)}</span>`;
+        chip.title = "Tap to speak this response (यह बोलने या भेजने के लिए टैप करें)";
+        chip.onclick = () => {
+          handleUserTurn(pillText);
+        };
+        dom.pihChipsScroll.appendChild(chip);
+      });
+    }
+
+    // Update Show Hint Button badge
+    if (dom.toggleHintBtn) {
+      dom.toggleHintBtn.innerHTML = `
+        <span>🔆 Show hint</span>
+        <span class="hint-ready-badge">💡 NEW</span>
+        <span class="pw-hint-chevron">∨</span>
+      `;
+    }
+  }
+
+  // Trigger Hint AI to visibly activate every time AI finishes speaking
+  function activateHintAIAfterSpeech() {
+    // 1. Reveal hint drawer so user can immediately read the answer
+    if (dom.roomHintDrawer) {
+      dom.roomHintDrawer.classList.remove('hidden');
+      dom.roomHintDrawer.classList.add('hint-active-pulse');
+      setTimeout(() => {
+        dom.roomHintDrawer?.classList.remove('hint-active-pulse');
+      }, 3500);
+    }
+
+    // 2. Pulse the toggle button
+    if (dom.toggleHintBtn) {
+      dom.toggleHintBtn.classList.add('hint-active-pulse');
+      setTimeout(() => {
+        dom.toggleHintBtn?.classList.remove('hint-active-pulse');
+      }, 3500);
+    }
+
+    // 3. Highlight the quick pills bar
+    if (dom.pwInstantHintBar) {
+      dom.pwInstantHintBar.classList.add('hint-active-pulse');
+      setTimeout(() => {
+        dom.pwInstantHintBar?.classList.remove('hint-active-pulse');
+      }, 3500);
     }
   }
 
