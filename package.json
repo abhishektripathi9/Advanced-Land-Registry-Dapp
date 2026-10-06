@@ -1,0 +1,19 @@
+{
+  "name": "talkriva-ai",
+  "version": "1.0.0",
+  "description": "TalkRiva AI - English Speaking Partner & PW Talk Riva Alternative with Real-Life Expressions",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y serve . -l 3000",
+    "dev": "python server.py"
+  },
+  "keywords": [
+    "english-speaking",
+    "ai-tutor",
+    "speech-recognition",
+    "talkriva",
+    "pwtalk"
+  ],
+  "author": "Abhishek Tripathi",
+  "license": "MIT"
+}

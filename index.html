@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalkRiva AI — Learn Spoken English with Aria (Clear Female Voice Partner)</title>
+  <meta name="description" content="100% Free AI English Speaking Coach with Aria. Real-life communication mastery, first impression tips, daily vocabularies, and interactive practice from tooti-footi to advanced level.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Glow Background Elements -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- APP SHELL -->
+  <div class="app-shell" id="app-shell">
+
+    <!-- ====================================================================
+         SCREEN 1: LOGIN & NATIVE LEVEL ASSESSMENT PORTAL
+         ==================================================================== -->
+    <section class="screen portal-screen active" id="portal-screen">
+      <div class="portal-card">
+        <!-- Logo & Brand Header -->
+        <div class="portal-brand">
+          <div class="portal-logo-orb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" x2="12" y1="19" y2="22"></line>
+            </svg>
+          </div>
+          <h1 class="portal-title">TalkRiva AI <span class="portal-badge">FREE</span></h1>
+          <p class="portal-subtitle">Real-Life Spoken English with <strong>Aria</strong> (Your AI Voice Coach)</p>
+        </div>
+
+        <!-- Coach Preview Banner -->
+        <div class="coach-preview-box">
+          <img src="assets/aria.jpg" alt="Aria AI Coach" class="coach-preview-avatar">
+          <div class="coach-preview-info">
+            <div class="coach-preview-name">Meet Aria 🌸</div>
+            <div class="coach-preview-desc">Clear Female Voice · Memory Mind · Real-Life Tips & Daily Practice</div>
+          </div>
+        </div>
+
+        <!-- Registration & Assessment Form -->
+        <form id="portal-form" class="portal-form">
+          <!-- Returning User Quick Banner (if previously registered) -->
+          <div class="portal-returning-banner hidden" id="portal-returning-banner">
+            <span class="prb-icon">👋</span>
+            <div class="prb-content">
+              <strong>Welcome back, <span id="portal-returning-name">Learner</span>!</strong>
+              <span id="portal-returning-detail">Aapka profile saved hai. Update details or continue directly.</span>
+            </div>
+            <button type="button" class="prb-continue-btn" id="portal-quick-continue-btn">Continue to Dashboard ➔</button>
+          </div>
+
+          <!-- User Name -->
+          <div class="form-group">
+            <label for="user-name-input" class="form-label">
+              <span>Aapka Naam (आपका नाम):</span>
+            </label>
+            <input 
+              type="text" 
+              id="user-name-input" 
+              class="portal-input" 
+              placeholder="e.g. Rahul, Priya, Amit, Abhishek..." 
+              required
+              autocomplete="name"
+            />
+          </div>
+
+          <!-- User Hometown / City -->
+          <div class="form-group">
+            <label for="user-city-input" class="form-label">
+              <span>Aapka Sheher / Hometown (आपका शहर/गृहक्षेत्र):</span>
+            </label>
+            <input 
+              type="text" 
+              id="user-city-input" 
+              class="portal-input" 
+              placeholder="e.g. Chitkoot, Delhi, Lucknow, Varanasi, Patna, Jaipur..." 
+              autocomplete="address-level2"
+            />
+          </div>
+
+          <!-- Native Diagnostic Level Question -->
+          <div class="form-group">
+            <label class="form-label">
+              <span>1. Aap abhi kaisi English bolte hain? (अपनी वर्तमान स्थिति चुनें):</span>
+            </label>
+            <div class="assessment-options-grid">
+              
+              <!-- Option 1: Tooti-Footi (Beginner) -->
+              <label class="assessment-radio-label active">
+                <input type="radio" name="english-level" value="tooti-footi" checked>
+                <div class="radio-card-content">
+                  <span class="level-emoji">🐣</span>
+                  <div class="level-details">
+                    <div class="level-main-text">Main bilkul tooti-footi English bol pata hu</div>
+                    <div class="level-sub-text">Beginner: Broken words, tense me galti, shuru se sikhna hai</div>
+                  </div>
+                </div>
+              </label>
+
+              <!-- Option 2: Hesitant -->
+              <label class="assessment-radio-label">
+                <input type="radio" name="english-level" value="hesitant">
+                <div class="radio-card-content">
+                  <span class="level-emoji">💬</span>
+                  <div class="level-details">
+                    <div class="level-main-text">Samajh leta hu, par bolte waqt atak jaata hu</div>
+                    <div class="level-sub-text">Hesitation removal, sentence flow & confidence</div>
+                  </div>
+                </div>
+              </label>
+
+              <!-- Option 3: Intermediate -->
+              <label class="assessment-radio-label">
+                <input type="radio" name="english-level" value="intermediate">
+                <div class="radio-card-content">
+                  <span class="level-emoji">🌿</span>
+                  <div class="level-details">
+                    <div class="level-main-text">Theek-thaak bolta hu, fluently native banna hai</div>
+                    <div class="level-sub-text">Daily conversation, better vocabulary & phrases</div>
+                  </div>
+                </div>
+              </label>
+
+              <!-- Option 4: Advanced -->
+              <label class="assessment-radio-label">
+                <input type="radio" name="english-level" value="advanced">
+                <div class="radio-card-content">
+                  <span class="level-emoji">🎯</span>
+                  <div class="level-details">
+                    <div class="level-main-text">Fluent hu, interview & professional level chahiye</div>
+                    <div class="level-sub-text">Job interviews, corporate meetings & STAR method</div>
+                  </div>
+                </div>
+              </label>
+
+            </div>
+          </div>
+
+          <!-- Target Goal Question -->
+          <div class="form-group">
+            <label class="form-label">
+              <span>2. Aapka Main Target/Goal kya hai? (आपका मुख्य लक्ष्य क्या है?):</span>
+            </label>
+            <div class="assessment-options-grid goal-grid">
+              <label class="assessment-radio-label active">
+                <input type="radio" name="english-goal" value="job-interview" checked>
+                <div class="radio-card-content">
+                  <span class="level-emoji">💼</span>
+                  <div class="level-details">
+                    <div class="level-main-text">Job Interview & Career Growth</div>
+                    <div class="level-sub-text">नौकरी के इंटरव्यू, ऑफिस मीटिंग्स और करियर में तरक्की</div>
+                  </div>
+                </div>
+              </label>
+              <label class="assessment-radio-label">
+                <input type="radio" name="english-goal" value="daily-chat">
+                <div class="radio-card-content">
+                  <span class="level-emoji">🗣️</span>
+                  <div class="level-details">
+                    <div class="level-main-text">Daily Real-life Conversation</div>
+                    <div class="level-sub-text">दोस्त बनाना, समाज में बात करना, बिना अटके बोलना</div>
+                  </div>
+                </div>
+              </label>
+              <label class="assessment-radio-label">
+                <input type="radio" name="english-goal" value="overcome-fear">
+                <div class="radio-card-content">
+                  <span class="level-emoji">⚡</span>
+                  <div class="level-details">
+                    <div class="level-main-text">Overcome Fear & Stage Hesitation</div>
+                    <div class="level-sub-text">अंदर का डर, झिझक और पसीना आना पूरी तरह खत्म करना</div>
+                  </div>
+                </div>
+              </label>
+              <label class="assessment-radio-label">
+                <input type="radio" name="english-goal" value="abroad-travel">
+                <div class="radio-card-content">
+                  <span class="level-emoji">✈️</span>
+                  <div class="level-details">
+                    <div class="level-main-text">Travel, Abroad & Higher Studies</div>
+                    <div class="level-sub-text">विदेश यात्रा, वीज़ा इंटरव्यू या कॉलेज में बोलना</div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Background / Profession Chips -->
+          <div class="form-group">
+            <label class="form-label">
+              <span>3. Aap kya karte hain? (आपकी पृष्ठभूमि):</span>
+            </label>
+            <div class="profession-chips-row">
+              <label class="prof-chip active">
+                <input type="radio" name="user-profession" value="student" checked>
+                <span>🎓 College Student / Learner</span>
+              </label>
+              <label class="prof-chip">
+                <input type="radio" name="user-profession" value="professional">
+                <span>💻 Working Professional / Job Seeker</span>
+              </label>
+              <label class="prof-chip">
+                <input type="radio" name="user-profession" value="business">
+                <span>🏢 Business / Freelancer / Other</span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="portal-cta-btn" id="start-learning-portal-btn">
+            <span>Start Learning with Aria (स्मार्ट AI मेमोरी एक्टिवेट करें)</span>
+            <span class="btn-arrow">➔</span>
+          </button>
+        </form>
+
+        <div class="portal-footer-notice">
+          🔒 100% Free · No credit card required · Instant access
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ====================================================================
+         SCREEN 2: MAIN DASHBOARD (2 CORE CHOICES + LESSON CURRICULUM)
+         ==================================================================== -->
+    <section class="screen dashboard-screen hidden" id="dashboard-screen">
+      <!-- Top Simple Header -->
+      <header class="dash-header">
+        <div class="dash-user-welcome">
+          <div class="dash-user-avatar">👤</div>
+          <div>
+            <h2 class="dash-welcome-text">Namaste, <span id="dash-user-display-name">Learner</span>! 👋</h2>
+            <div class="dash-meta-badges">
+              <span class="dash-level-badge" id="dash-level-badge">🐣 Level: Tooti-Footi to Clear Speech</span>
+              <span class="dash-goal-badge" id="dash-goal-badge">💼 Goal: Job Interview & Career</span>
+              <span class="dash-city-badge" id="dash-city-badge">📍 Hometown</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-header-actions">
+          <button id="open-memory-modal-btn" class="dash-action-btn memory-btn" title="View Aria's Memory">
+            <span>🧠 Aria's Memory</span>
+          </button>
+          <button id="open-mistakes-from-dash-btn" class="dash-action-btn">📚 Common Mistakes (आम गलतियां)</button>
+          <button id="logout-portal-btn" class="dash-action-btn outline">Change Profile</button>
+        </div>
+      </header>
+
+      <!-- Aria Personalized Welcome Alert with Memory Intelligence -->
+      <div class="aria-welcome-banner">
+        <img src="assets/aria.jpg" alt="Aria" class="aria-banner-avatar">
+        <div class="aria-banner-content">
+          <div class="aria-banner-speaker">Aria (Your AI Voice Partner & Memory Mind):</div>
+          <p class="aria-banner-text" id="aria-personalized-greeting">
+            "Hello! बिल्कुल चिंता मत कीजिए। हम टूटी-फूटी इंग्लिश से शुरू करके आपको step-by-step फ्लूएंट बनाएंगे। नीचे दिए गए दो विकल्पों में से कोई भी चुनें!"
+          </p>
+        </div>
+      </div>
+
+      <!-- TOP NAVIGATION BAR (CLEAN SEPARATION OF LESSONS & AI ROOM) -->
+      <nav class="dash-tabs-bar" id="dash-tabs-bar">
+        <button class="dash-tab-btn active" id="tab-btn-lessons" data-tab="lessons">
+          <span class="tab-icon">📚</span>
+          <span class="tab-text-wrap">
+            <span class="tab-title">Lessons & Vocab Practice Hub</span>
+            <span class="tab-subtitle">Visual Cards · "Use Word" Examples · MCQ Practice Quiz</span>
+          </span>
+          <span class="tab-badge">Practice Hub</span>
+        </button>
+
+        <button class="dash-tab-btn" id="tab-btn-ai" data-tab="ai">
+          <span class="tab-icon">🌸</span>
+          <span class="tab-text-wrap">
+            <span class="tab-title">Talk with Aria (AI Voice Partner)</span>
+            <span class="tab-subtitle">Live Call · Clear Female Voice · Real-Time Hints</span>
+          </span>
+          <span class="tab-badge pulse-badge">Live Voice</span>
+        </button>
+      </nav>
+
+      <!-- ==================================================================
+           TAB PANEL 1: LESSONS & VOCABS PRACTICE HUB
+           ================================================================== -->
+      <div class="dash-tab-content active" id="tab-content-lessons">
+
+        <!-- SUBSECTION 1: VISUAL VOCABULARY FLASHCARDS WITH REAL PHOTOS -->
+        <section class="hub-section visual-vocabs-section">
+          <div class="hub-section-header">
+            <div class="hsh-left">
+              <span class="hsh-badge">🖼️ Visual Flashcards · Daily to Advanced</span>
+              <h3 class="hsh-title">Visual Vocabulary Cards (हर इंटरव्यू क्रैक करने वाले शब्द)</h3>
+              <p class="hsh-subtitle">
+                असली फोटो से समझें, प्रोनउंसिएशन सुनें, और नीचे दिए गए <strong>"Use word to this sentence"</strong> बॉक्स से सीधे वाक्यों में बोलना सीखें!
+              </p>
+            </div>
+            
+            <!-- Category Filter Pills -->
+            <div class="vocab-filter-pills" id="vocab-filter-pills">
+              <button class="v-filter-pill active" data-filter="all">All Vocabs (सभी 8 शब्द)</button>
+              <button class="v-filter-pill" data-filter="interview">💼 Interview Cracker</button>
+              <button class="v-filter-pill" data-filter="daily">🗣️ Daily Social</button>
+              <button class="v-filter-pill" data-filter="workplace">📊 Workplace & Pitch</button>
+              <button class="v-filter-pill" data-filter="leadership">⚡ Executive Leadership</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Visual Vocabs Cards Grid -->
+          <div class="visual-vocabs-grid" id="visual-vocabs-grid">
+            <!-- Dynamically populated from engine.visualVocabs -->
+          </div>
+        </section>
+
+
+        <!-- SUBSECTION 2: INTERACTIVE MCQ PRACTICE ZONE (LESSON & VOCAB QUESTIONS) -->
+        <section class="hub-section mcq-quiz-section">
+          <div class="hub-section-header">
+            <div class="hsh-left">
+              <span class="hsh-badge green-badge">📝 Interactive Quiz · Lesson & Vocab Practice</span>
+              <h3 class="hsh-title">MCQ Practice Zone (गलतियाँ सुधारें और इंटरव्यू क्रैक करें)</h3>
+              <p class="hsh-subtitle">
+                चार विकल्पों में से सही उत्तर चुनें — तुरंत रंगीन फीडबैक, हिंदी व्याख्या, और Aria की आवाज़ में सही वाक्य सुनें!
+              </p>
+            </div>
+
+            <!-- Quiz Category Filter -->
+            <div class="mcq-filter-pills" id="mcq-filter-pills">
+              <button class="mcq-filter-pill active" data-mcq-filter="all">All Questions (10)</button>
+              <button class="mcq-filter-pill" data-mcq-filter="interview">🎯 Interview Cracker</button>
+              <button class="mcq-filter-pill" data-mcq-filter="mistake">⚠️ Mistake Fixes</button>
+              <button class="mcq-filter-pill" data-mcq-filter="vocab">📖 Power Vocab</button>
+              <button class="mcq-filter-pill" data-mcq-filter="daily">🗣️ Daily Social</button>
+            </div>
+          </div>
+
+          <!-- The MCQ Interactive Quiz Card -->
+          <div class="mcq-card-container">
+            <div class="mcq-card" id="mcq-active-card">
+              <!-- Top Quiz Stats Bar -->
+              <div class="mcq-stats-bar">
+                <div class="mcq-counter">
+                  Question <span id="mcq-current-num">1</span> of <span id="mcq-total-num">10</span>
+                </div>
+                <div class="mcq-badge-tag" id="mcq-cat-badge">🎯 Interview Cracker</div>
+                <div class="mcq-score-box">
+                  <span>Score: <strong id="mcq-score-display">0</strong></span>
+                  <span class="mcq-streak" id="mcq-streak-display">🔥 Streak: 0</span>
+                </div>
+              </div>
+
+              <!-- Question Box -->
+              <div class="mcq-question-wrapper">
+                <h4 class="mcq-question-prompt" id="mcq-question-prompt">
+                  Which of the following is the most professional and confident way to introduce yourself in a job interview?
+                </h4>
+                <div class="mcq-question-hindi" id="mcq-question-hindi">
+                  🇮🇳 संदर्भ: इंटरव्यू में अपना परिचय देने का सबसे सही, पेशेवर और आत्मविश्वासी तरीका कौन सा है?
+                </div>
+              </div>
+
+              <!-- 4 Options Grid -->
+              <div class="mcq-options-grid" id="mcq-options-grid">
+                <!-- Options populated dynamically -->
+              </div>
+
+              <!-- Feedback & Explanation Box (Shown after selecting option) -->
+              <div class="mcq-feedback-drawer hidden" id="mcq-feedback-drawer">
+                <div class="mcq-feedback-status" id="mcq-feedback-status">
+                  <!-- e.g. 🎉 बिल्कुल सही! (Correct!) -->
+                </div>
+                <div class="mcq-feedback-explanation" id="mcq-feedback-explanation">
+                  <!-- Detailed bilingual explanation -->
+                </div>
+                <div class="mcq-interview-tip-box" id="mcq-interview-tip-box">
+                  <span class="tip-icon">💎</span>
+                  <div>
+                    <strong>Interview Cracker & Real-Life Secret:</strong>
+                    <div id="mcq-tip-text">Never say 'passed out' for college completion—always say 'graduated from'.</div>
+                  </div>
+                </div>
+                
+                <div class="mcq-actions-row">
+                  <button class="mcq-audio-btn" id="mcq-listen-correct-btn">
+                    <span>🔊 Listen Correct Sentence (Aria की आवाज़ में सुनें)</span>
+                  </button>
+                  <button class="mcq-next-btn" id="mcq-next-btn">
+                    <span>Next Question (अगला सवाल) ➔</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+
+        <!-- SUBSECTION 3: 7-DAY REAL-LIFE CURRICULUM ROADMAP -->
+        <section class="hub-section curriculum-section">
+          <div class="hub-section-header">
+            <div class="hsh-left">
+              <span class="hsh-badge purple-badge">📅 7-Day Complete Track</span>
+              <h3 class="hsh-title">7-Day Real-Life Spoken English Track</h3>
+              <p class="hsh-subtitle">
+                दिन 1 (पहला प्रभाव) से दिन 7 (इंटरव्यू मास्टरी) तक का सम्पूर्ण स्पोकन इंग्लिश कोर्स।
+              </p>
+            </div>
+            <button class="core-cta-btn roadmap-cta-btn" id="start-roadmap-btn">
+              <span>Open Day 1 Lesson & Practice ➔</span>
+            </button>
+          </div>
+
+          <div class="roadmap-preview-list" id="curriculum-lessons-list">
+            <!-- Dynamically populated from engine.lessonsCurriculum -->
+          </div>
+        </section>
+
+      </div>
+
+
+      <!-- ==================================================================
+           TAB PANEL 2: AI CONVERSATION PARTNER (ARIA VOICE ROOM GATEWAY)
+           ================================================================== -->
+      <div class="dash-tab-content hidden" id="tab-content-ai">
+        <div class="ai-hub-container">
+          
+          <div class="ai-hub-hero-card">
+            <div class="ai-hero-left">
+              <div class="ai-avatar-glow-ring">
+                <img src="assets/aria.jpg" alt="Aria" class="ai-hero-avatar-large">
+                <div class="ai-live-indicator">
+                  <span class="live-dot"></span>
+                  <span>Online & Ready</span>
+                </div>
+              </div>
+              <div class="ai-hero-meta">
+                <h3 class="ai-hero-title">Aria — Your AI Voice Conversation Partner 🌸</h3>
+                <p class="ai-hero-desc">
+                  आरिया केवल साफ़ और स्पष्ट फीमेल वॉइस में बात करती है। यह आपकी हर बात याद रखती है, लाइव बोलते वक्त गलतियों को पकड़ती है, और आपको हिंट देकर बोलना सिखाती है।
+                </p>
+                
+                <div class="ai-pill-features">
+                  <span class="ai-f-pill">🌸 100% Clear Female Voice</span>
+                  <span class="ai-f-pill">⚡ Fast Speeds (1.15x, 1.25x, 1.5x)</span>
+                  <span class="ai-f-pill">💡 Show Hint (Exact English Answers)</span>
+                  <span class="ai-f-pill">🧠 Persistent Memory Mind</span>
+                  <span class="ai-f-pill">🔍 Real-Time Mistake Detector</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ai-hero-right">
+              <div class="ai-mode-picker-card">
+                <div class="ampc-title">Choose Conversation Mode (बातचीत का विषय चुनें):</div>
+                <div class="ampc-options">
+                  <label class="ai-mode-option active">
+                    <input type="radio" name="dash-ai-mode" value="casual" checked>
+                    <div class="amo-content">
+                      <span class="amo-icon">☕</span>
+                      <div>
+                        <div class="amo-title">Casual Daily Life Chat</div>
+                        <div class="amo-desc">दोस्ताना बातचीत, दिनचर्या, मौसम, चाय/कॉफ़ी और शौक</div>
+                      </div>
+                    </div>
+                  </label>
+                  <label class="ai-mode-option">
+                    <input type="radio" name="dash-ai-mode" value="interview">
+                    <div class="amo-content">
+                      <span class="amo-icon">💼</span>
+                      <div>
+                        <div class="amo-title">Job Interview Mock Practice</div>
+                        <div class="amo-desc">HR प्रश्न, STAR उत्तर, तकनीकी अनुभव और वेतन चर्चा</div>
+                      </div>
+                    </div>
+                  </label>
+                  <label class="ai-mode-option">
+                    <input type="radio" name="dash-ai-mode" value="fear">
+                    <div class="amo-content">
+                      <span class="amo-icon">⚡</span>
+                      <div>
+                        <div class="amo-title">Hesitation & Stage Fear Buster</div>
+                        <div class="amo-desc">झिझक मिटाना, आत्मविश्वास और तेज़ बोलने का अभ्यास</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                <button class="enter-ai-room-giant-btn" id="enter-talk-room-btn">
+                  <span>🎙️ Enter Black Glowing Voice Room Now (बातचीत शुरू करें)</span>
+                  <span class="btn-arrow">➔</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Aria's Memory Snapshot in AI Tab -->
+          <div class="ai-memory-snapshot-card">
+            <div class="amsc-header">
+              <div class="amsc-title">
+                <span>🧠 What Aria Remembers About You Right Now:</span>
+              </div>
+              <button class="amsc-open-full-btn" id="open-memory-from-ai-tab">View Full Memory Mind ➔</button>
+            </div>
+            <div class="amsc-grid" id="ai-tab-memory-grid">
+              <!-- Memory pills dynamically populated -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ====================================================================
+         SCREEN 3: TALK WITH ARIA (UNIQUE BLACK GLOWING ROOM)
+         ==================================================================== -->
+    <!-- ====================================================================
+         SCREEN 3: TALK WITH ARIA (PW TALK RIVA REAL-LIFE ROOM)
+         ==================================================================== -->
+    <section class="screen talk-aria-screen hidden" id="talk-aria-screen">
+      
+      <!-- Top Room Bar (PW Talk Riva Style) -->
+      <header class="room-top-bar">
+        <button id="back-to-dashboard-btn" class="room-back-btn" title="Back to Hub">
+          <span class="back-chevron">‹</span>
+        </button>
+
+        <div class="room-partner-info">
+          <img src="assets/aria.jpg" alt="Riva" class="room-partner-mini-thumb">
+          <div class="room-partner-meta">
+            <div class="room-partner-name">Riva <span class="female-badge">🌸 Voice</span> <span class="riva-mood-badge" id="riva-room-mood">🌸 Warm & Friendly</span></div>
+            <div class="room-partner-status" id="aria-speaking-status">Online · Ready to listen</div>
+          </div>
+        </div>
+
+        <!-- Level Selector Dropdown Pill (PW Talk style: Beginner Level 2 ∨) -->
+        <div class="room-level-dropdown-wrap">
+          <select id="room-level-select" class="room-level-select" title="Difficulty Level">
+            <option value="beginner">Beginner Level 1 ∨</option>
+            <option value="tooti-footi" selected>Beginner Level 2 ∨</option>
+            <option value="intermediate">Intermediate ∨</option>
+            <option value="advanced">Advanced ∨</option>
+          </select>
+        </div>
+
+        <div class="room-top-actions">
+          <!-- Voice Speed Toggle (Default: 0.98x PW Talk Riva Speed) -->
+          <select id="aria-speed-select" class="room-speed-select" title="Speaking Speed">
+            <option value="0.75">0.75x (Extra Slow)</option>
+            <option value="0.85">0.85x (Slow)</option>
+            <option value="0.98" selected>0.98x (PW Talk Riva Speed)</option>
+            <option value="1.15">1.15x (Conversational)</option>
+            <option value="1.25">1.25x (Fast Fluent)</option>
+          </select>
+
+          <!-- Mistakes Drawer / Settings Toggle -->
+          <button id="toggle-analysis-panel-btn" class="room-gear-btn" title="Settings & Mistake Detector">
+            <span>⚙️</span>
+            <span class="tool-count-badge" id="tool-mistakes-badge">0</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Stage Area -->
+      <div class="room-stage-container">
+        
+        <!-- Glowing Holographic Audio Visualizer Orb (Compact) -->
+        <div class="holographic-voice-stage">
+          <div class="hologram-outer-ring" id="hologram-outer-ring"></div>
+          <div class="hologram-avatar-wrap">
+            <img src="assets/aria.jpg" alt="Riva AI Partner" class="hologram-avatar-img" id="hologram-avatar-img">
+            <div class="hologram-pulse-ripple" id="hologram-pulse-ripple"></div>
+          </div>
+          <canvas id="room-audio-visualizer-canvas" class="room-visualizer-canvas" width="240" height="32"></canvas>
+        </div>
+
+        <!-- Scrollable Conversation Bubble Stream (Smaller, highly legible font) -->
+        <div class="room-dialogue-stream" id="room-chat-stream">
+          <!-- Populated dynamically with PW Talk style bubbles with 文A and 🔊 -->
+        </div>
+
+        <!-- BOTTOM CONTROLS WRAPPER (MATCHING PW TALK PHOTO) -->
+        <div class="pw-controls-wrapper">
+          
+          <!-- SHOW HINT ROW (Right Aligned Outline Pill Button) -->
+          <div class="pw-hint-row">
+            <button class="pw-show-hint-btn" id="toggle-hint-btn">
+              <span>🔆 Show hint</span>
+              <span class="pw-hint-chevron">∨</span>
+            </button>
+          </div>
+
+          <!-- SHOW HINT DROPDOWN CARD (COLLAPSIBLE) -->
+          <div class="room-hint-drawer hidden" id="room-hint-drawer">
+            <div class="rh-header">
+              <div class="rh-title">
+                <span class="rh-bulb">💡</span>
+                <span>HINT (आरिया के सवाल का सीधा जवाब):</span>
+              </div>
+              <button class="rh-close-btn" id="close-rh-btn">&times;</button>
+            </div>
+            <div class="rh-content">
+              <div class="rh-question-box">
+                <span class="rh-q-tag">❓ आरिया ने पूछा (What Riva Asked):</span>
+                <div class="rh-aria-asking-text" id="rh-aria-asking-text">
+                  "आरिया आपसे बातचीत का विषय पूछ रही है।"
+                </div>
+              </div>
+              <div class="rh-answer-box">
+                <span class="rh-a-tag">🗣️ इंग्लिश में ऐसे बोलें (Say this):</span>
+                <div class="rh-sentence" id="rh-target-sentence">
+                  "I am feeling great today!"
+                </div>
+              </div>
+              <div class="rh-phonetic" id="rh-phonetic-guide">
+                🗣️ Pronounce as: <em>"Eye am FEEL-ing grayt too-day!"</em>
+              </div>
+              <div class="rh-hindi" id="rh-hindi-meaning">
+                🇮🇳 हिंदी: आज मैं बहुत अच्छा महसूस कर रहा हूँ।
+              </div>
+              <div class="rh-actions">
+                <button class="rh-btn-listen" id="rh-listen-btn">🔊 Hear (सुनें)</button>
+                <button class="rh-btn-speak" id="rh-speak-now-btn">🎙️ Speak this (यह बोलें)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interim Speech Preview when speaking -->
+          <div class="room-interim-box hidden" id="room-interim-box">
+            <span class="interim-pulse-dot">🔴</span>
+            <span class="interim-speech-text" id="room-interim-text">Listening... बोलिए</span>
+          </div>
+
+          <!-- CENTER CONTROLS: GOLDEN MIC + TAP TO SPEAK + HELP ME SPEAK -->
+          <div class="pw-mic-center-stack">
+            <!-- Golden Glow Mic Button -->
+            <button class="pw-golden-mic-btn" id="room-mic-btn" aria-label="Tap to speak">
+              <div class="pw-mic-halo"></div>
+              <div class="pw-mic-inner">
+                <svg class="pw-mic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" x2="12" y1="19" y2="22"></line>
+                </svg>
+              </div>
+            </button>
+            
+            <!-- Caption below mic -->
+            <div class="pw-mic-caption" id="room-mic-caption">Tap to speak</div>
+
+            <!-- Golden Pill Button: HELP ME SPEAK -->
+            <button class="pw-help-me-speak-btn" id="help-me-speak-btn">
+              <span class="pw-hms-icon">🤹</span>
+              <span>Help me speak</span>
+            </button>
+          </div>
+
+          <!-- SLEEK FALLBACK TEXT INPUT FORM -->
+          <form id="room-text-form" class="pw-room-text-form">
+            <input 
+              type="text" 
+              id="room-text-input" 
+              class="pw-room-text-input" 
+              placeholder="Or type your sentence here (या यहाँ टाइप करें)..." 
+              autocomplete="off"
+            />
+            <button type="submit" class="pw-room-send-btn" id="room-text-send-btn" title="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" x2="11" y1="2" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+      <!-- Slide-in Mistake Detector Drawer -->
+      <aside class="room-mistake-drawer hidden" id="room-mistake-drawer">
+        <div class="rmd-header">
+          <div class="rmd-title">🔍 MISTAKE DETECTOR (गलतियाँ और सुधार)</div>
+          <button class="rmd-close-btn" id="close-rmd-btn">&times;</button>
+        </div>
+        <div class="rmd-body">
+          <div class="diff-card">
+            <div class="diff-title">What you said vs Correct:</div>
+            <div class="diff-row wrong-row" id="rmd-wrong-row">
+              <span class="diff-icon">❌</span>
+              <span id="rmd-wrong-text">No mistakes yet</span>
+            </div>
+            <div class="diff-row correct-row" id="rmd-correct-row">
+              <span class="diff-icon">✅</span>
+              <span id="rmd-correct-text">Everything looks good!</span>
+            </div>
+          </div>
+
+          <div class="rmd-hindi-box">
+            <div class="rmd-hindi-title">🇮🇳 हिंदी में समझें क्यों गलत था:</div>
+            <div class="rmd-hindi-text" id="rmd-hindi-explanation">
+              गलती होने पर यहाँ हिंदी में समझाया जाएगा।
+            </div>
+          </div>
+
+          <div class="rmd-native-box">
+            <div class="rmd-native-title">💎 Native Natural Phrasing:</div>
+            <div class="rmd-native-text" id="rmd-native-text">"Native expression will appear here."</div>
+            <button class="rmd-listen-native-btn" id="rmd-listen-native-btn">🔊 Hear Native Pronunciation</button>
+          </div>
+        </div>
+      </aside>
+
+    </section>
+
+  </div>
+
+  <!-- ====================================================================
+       MODAL 1: LESSON VIEWER (REAL-LIFE TIPS + VOCABULARIES + PRACTICE CTA)
+       ==================================================================== -->
+  <div class="modal-overlay hidden" id="lesson-viewer-modal">
+    <div class="modal-card lesson-modal-card">
+      <div class="modal-header">
+        <div class="lm-header-info">
+          <span class="lm-day-badge" id="lm-day-badge">Day 1</span>
+          <span class="lm-level-tag" id="lm-level-tag">Beginner 🐣</span>
+          <h3 class="lm-title" id="lm-title">The 7-Second Rule: First Impressions</h3>
+        </div>
+        <button class="modal-close-btn" id="close-lesson-modal">&times;</button>
+      </div>
+
+      <div class="modal-scroll-body">
+        
+        <!-- Summary Box -->
+        <p class="lm-summary" id="lm-summary">
+          Master the psychological first impression window with greetings, posture, and tone inflection.
+        </p>
+
+        <!-- Section 1: Real-Life Communication Tips -->
+        <div class="lm-section">
+          <div class="lm-sec-title">🌟 Real-Life Communication Secrets (रियल-लाइफ बातचीत के नियम):</div>
+          <div class="lm-tips-list" id="lm-tips-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Section 2: 5 Power Vocabularies -->
+        <div class="lm-section">
+          <div class="lm-sec-title">📖 5 Daily Power Vocabularies (इस पाठ के 5 महत्वपूर्ण शब्द):</div>
+          <div class="lm-vocabs-grid" id="lm-vocabs-grid">
+            <!-- Dynamically populated with audio buttons -->
+          </div>
+        </div>
+
+        <!-- Section 3: Common Mistake & Native Fix -->
+        <div class="lm-section">
+          <div class="lm-sec-title">⚠️ Common Indian Mistake to Avoid (इस विषय पर आम गलती):</div>
+          <div class="lm-mistake-box" id="lm-mistake-box">
+            <div class="lmb-row wrong">
+              <span class="lmb-tag">❌ Don't Say:</span>
+              <span id="lm-wrong-phrase">"Myself Rahul..."</span>
+            </div>
+            <div class="lmb-row correct">
+              <span class="lmb-tag">✅ Native Fix:</span>
+              <span id="lm-correct-phrase">"I am Rahul / My name is Rahul..."</span>
+            </div>
+            <div class="lmb-hindi" id="lm-mistake-hindi">
+              'Myself' से वाक्य शुरू नहीं करते, हमेशा 'I am' बोलें।
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Interactive Practice with Aria Banner -->
+        <div class="lm-practice-banner">
+          <div class="lmp-content">
+            <div class="lmp-title">🎙️ Practice this Lesson with Aria (आरिया के साथ बोलकर अभ्यास करें)</div>
+            <p class="lmp-desc" id="lm-practice-goal">
+              Introduce yourself with your name, city, and mood without saying 'Myself'. Aria is waiting to listen and guide you!
+            </p>
+          </div>
+          <button class="lmp-start-btn" id="start-lesson-practice-btn">
+            <span>Practice with Aria Now ➔</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ====================================================================
+       MODAL 2: ARIA'S MEMORY & MIND SYSTEM
+       ==================================================================== -->
+  <div class="modal-overlay hidden" id="aria-memory-modal">
+    <div class="modal-card memory-modal-card">
+      <div class="modal-header">
+        <div class="memory-header-info">
+          <span class="memory-icon">🧠</span>
+          <div>
+            <h3>Aria's Memory Mind (आरिया का मेमोरी सिस्टम)</h3>
+            <p class="memory-subtitle">Aria remembers your profile, goals, facts, and mistakes across conversations!</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="close-memory-modal">&times;</button>
+      </div>
+
+      <div class="modal-scroll-body">
+        
+        <!-- Profile Card -->
+        <div class="mem-profile-card">
+          <div class="mpc-avatar">🌸</div>
+          <div class="mpc-info">
+            <div class="mpc-name" id="mem-user-name">Learner</div>
+            <div class="mpc-tags">
+              <span class="mpc-tag" id="mem-level-tag">Level: Tooti-footi</span>
+              <span class="mpc-tag" id="mem-goal-tag">Goal: Job Interview</span>
+              <span class="mpc-tag" id="mem-prof-tag">Background: Student</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Memory Notes -->
+        <div class="mem-section">
+          <div class="mem-sec-title">📝 Facts & Notes Aria Remembers About You:</div>
+          <ul class="mem-notes-list" id="mem-notes-list">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+
+        <!-- Grammar Slips History -->
+        <div class="mem-section">
+          <div class="mem-sec-title">🔍 Grammar Areas Being Monitored & Fixed:</div>
+          <div class="mem-slips-list" id="mem-slips-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Completed Lessons -->
+        <div class="mem-section">
+          <div class="mem-sec-title">🌟 Lessons Mastered with Aria:</div>
+          <div class="mem-lessons-progress" id="mem-lessons-progress">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ====================================================================
+       MODAL 3: COMMON MISTAKES LIBRARY
+       ==================================================================== -->
+  <div class="modal-overlay hidden" id="mistakes-lib-modal">
+    <div class="modal-card mistakes-modal-card">
+      <div class="modal-header">
+        <h3>📚 Top Common Indian English Mistakes & Fixes (आम गलतियां)</h3>
+        <button class="modal-close-btn" id="close-mistakes-modal">&times;</button>
+      </div>
+      <div class="mistakes-modal-body">
+        <p class="mistakes-intro">इन 20 गलतियों को सुधारते ही आपकी टूटी-फूटी इंग्लिश एकदम साफ़ और नेचुरल हो जाएगी:</p>
+        <div class="mistakes-grid" id="mistakes-rules-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 4: HELP ME SPEAK (HINDI TO ENGLISH INSTANT TRANSLATION)
+       ==================================================================== -->
+  <div class="modal-overlay hidden" id="help-me-speak-modal">
+    <div class="modal-card hms-modal-card">
+      <div class="modal-header">
+        <div class="hms-modal-header-info">
+          <div class="hms-modal-badge">🤹 Help Me Speak (हिंदी अनुवाद)</div>
+          <h3 class="hms-modal-title">Koi baat nahi! Hindi me bolo, English me translate kar dungi</h3>
+        </div>
+        <button class="modal-close-btn" id="close-hms-modal">&times;</button>
+      </div>
+
+      <div class="hms-modal-body">
+        <div class="hms-aria-banner">
+          <img src="assets/aria.jpg" alt="Riva" class="hms-banner-avatar">
+          <div class="hms-banner-text">
+            <strong>Riva:</strong> <em>"कोई बात नहीं! आप हिंदी में बोलिए या टाइप करिए, मैं तुरंत उसे Fluent English में अनुवाद करके बोलना सिखा दूंगी!"</em>
+          </div>
+        </div>
+
+        <!-- Hindi Mic Button Zone -->
+        <div class="hms-mic-zone">
+          <button class="hms-hindi-mic-btn" id="hms-hindi-mic-btn" title="Tap to Speak in Hindi">
+            <div class="hms-mic-glow-halo"></div>
+            <div class="hms-mic-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" x2="12" y1="19" y2="22"></line>
+              </svg>
+            </div>
+          </button>
+          <div class="hms-mic-label" id="hms-mic-label">Tap to speak in Hindi (हिंदी में बोलें)</div>
+        </div>
+
+        <!-- Hindi Input Field -->
+        <div class="hms-input-row">
+          <input 
+            type="text" 
+            id="hms-hindi-input" 
+            class="hms-hindi-input" 
+            placeholder="या यहाँ हिंदी/हिंग्लिश लिखें (उदा: हाँ मैं चित्रकूट से हूँ)..." 
+          />
+          <button type="button" class="hms-translate-btn" id="hms-translate-btn">Translate ➜</button>
+        </div>
+
+        <!-- Quick Hindi Suggestions Chips -->
+        <div class="hms-suggestions-row">
+          <span class="hms-sug-tag">⚡ Quick Hindi:</span>
+          <button type="button" class="hms-sug-chip" data-phrase="हाँ मैं चित्रकूट से हूँ">"हाँ मैं चित्रकूट से हूँ"</button>
+          <button type="button" class="hms-sug-chip" data-phrase="मुझे इंटरव्यू में थोड़ा डर लग रहा है">"मुझे इंटरव्यू में थोड़ा डर लग रहा है"</button>
+          <button type="button" class="hms-sug-chip" data-phrase="क्या आप चित्रकूट के बारे में जानती हैं?">"क्या आप चित्रकूट के बारे में जानती हैं?"</button>
+          <button type="button" class="hms-sug-chip" data-phrase="मेरी तैयारी बहुत अच्छी चल रही है">"मेरी तैयारी बहुत अच्छी चल रही है"</button>
+        </div>
+
+        <!-- Translation Result Card -->
+        <div class="hms-result-card" id="hms-result-card">
+          <div class="hms-res-target-row">
+            <span class="hms-res-tag">🇬🇧 English में ऐसे बोलें:</span>
+            <div class="hms-res-english" id="hms-res-english">"Yes, I am from Chitkoot."</div>
+          </div>
+          <div class="hms-res-phonetic" id="hms-res-phonetic">
+            🗣️ उच्चारण: <em>"Yes, eye am from Chit-koot."</em>
+          </div>
+          <div class="hms-res-hindi" id="hms-res-hindi">
+            🇮🇳 आपका वाक्य: <span>हाँ मैं चित्रकूट से हूँ</span>
+          </div>
+
+          <div class="hms-res-actions">
+            <button type="button" class="hms-act-hear-btn" id="hms-act-hear-btn">🔊 Hear English (सुनें)</button>
+            <button type="button" class="hms-act-send-btn" id="hms-act-send-btn">🚀 Send to Riva (आरिया को भेजें)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/engine.js"></script>
+  <script src="js/speech.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

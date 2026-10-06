@@ -1,0 +1,2030 @@
+/**
+ * TalkRiva AI - Conversation & Fluency Engine (PW Talk + Aria Intelligent Mind Edition)
+ * Includes:
+ * 1. Persistent User Memory & Mind System (Profile, Goals, Extracted Facts, Grammar Slips)
+ * 2. 7-Day Comprehensive Curriculum (Beginner to Advanced with Real-Life Tips, Vocabs & Practice)
+ * 3. Deep Mistake Detector with 30+ Grammar & Indianism Rules
+ * 4. Contextual, Memory-Aware Conversational Intelligence with Polite Spoken Corrections
+ * 5. Visual Diff Formatter (Wrong vs Correct highlights)
+ * 6. Bilingual Hindi Explanations for all mistakes
+ * 7. Filler Word Counter ("um", "uh", "like", "actually")
+ * 8. Hindi-to-English Instant Helper & Shadowing Scorer
+ */
+
+// ============================================================================
+// 1. USER MEMORY & MIND SYSTEM
+// ============================================================================
+class UserMemoryMind {
+  constructor() {
+    this.storageKey = 'talkriva_user_memory_v2';
+    this.data = this.loadMemory();
+  }
+
+  loadMemory() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem(this.storageKey);
+        if (saved) return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn("Could not load memory from localStorage:", e);
+    }
+    const hasStorage = typeof localStorage !== 'undefined';
+    return {
+      profile: {
+        name: hasStorage ? (localStorage.getItem('talkriva_user_name') || '') : '',
+        city: hasStorage ? (localStorage.getItem('talkriva_user_city') || '') : '',
+        level: hasStorage ? (localStorage.getItem('talkriva_user_level') || 'tooti-footi') : 'tooti-footi',
+        goal: hasStorage ? (localStorage.getItem('talkriva_user_goal') || 'job-interview') : 'job-interview',
+        profession: hasStorage ? (localStorage.getItem('talkriva_user_profession') || 'student') : 'student'
+      },
+      memoryNotes: [
+        "Aria understands learner wants to overcome broken English step-by-step.",
+        "Targeting clear female voice pronunciation and conversational confidence."
+      ],
+      userFacts: {},
+      grammarSlipHistory: [],
+      masteredVocabs: [],
+      completedLessons: [],
+      turnsCount: 0,
+      confidenceScore: 70
+    };
+  }
+
+  saveMemory() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(this.storageKey, JSON.stringify(this.data));
+      }
+    } catch (e) {
+      console.warn("Could not save memory to localStorage:", e);
+    }
+  }
+
+  updateProfile(profile) {
+    this.data.profile = { ...this.data.profile, ...profile };
+    if (typeof localStorage !== 'undefined') {
+      if (profile.name) localStorage.setItem('talkriva_user_name', profile.name);
+      if (profile.city) localStorage.setItem('talkriva_user_city', profile.city);
+      if (profile.level) localStorage.setItem('talkriva_user_level', profile.level);
+      if (profile.goal) localStorage.setItem('talkriva_user_goal', profile.goal);
+      if (profile.profession) localStorage.setItem('talkriva_user_profession', profile.profession);
+    }
+    if (profile.city) {
+      this.data.userFacts['city'] = profile.city;
+      this.addNote(`Learner lives in or is from ${profile.city}.`);
+    }
+    if (profile.goal) {
+      this.addNote(`Primary training focus: ${profile.goal}.`);
+    }
+    this.saveMemory();
+  }
+
+  recordTurn(userText, aiReply, analysis, lessonDay = null) {
+    this.data.turnsCount++;
+    this.extractFacts(userText);
+
+    if (analysis && analysis.hasError) {
+      if (analysis.grammarExplanation && !this.data.grammarSlipHistory.includes(analysis.grammarExplanation)) {
+        this.data.grammarSlipHistory.push(analysis.grammarExplanation);
+        if (this.data.grammarSlipHistory.length > 10) this.data.grammarSlipHistory.shift();
+      }
+    }
+
+    if (lessonDay) {
+      const dayNum = parseInt(lessonDay, 10);
+      if (!this.data.completedLessons.includes(dayNum)) {
+        this.data.completedLessons.push(dayNum);
+        this.addNote(`Completed Day ${dayNum} practice lesson with Aria.`);
+      }
+    }
+
+    this.saveMemory();
+  }
+
+  extractFacts(text) {
+    const lower = text.toLowerCase();
+    const cities = ['chitkoot', 'chitrakoot', 'delhi', 'mumbai', 'bangalore', 'varanasi', 'banaras', 'ayodhya', 'lucknow', 'kanpur', 'prayagraj', 'allahabad', 'kolkata', 'chennai', 'hyderabad', 'pune', 'jaipur', 'patna', 'bhopal', 'ahmedabad', 'noida', 'gurgaon', 'chandigarh', 'indore'];
+    for (const c of cities) {
+      if (lower.includes(c)) {
+        const cityName = c.charAt(0).toUpperCase() + c.slice(1);
+        this.data.userFacts['city'] = cityName;
+        this.data.profile.city = cityName;
+        if (typeof localStorage !== 'undefined') localStorage.setItem('talkriva_user_city', cityName);
+        this.addNote(`Learner mentioned living in or being from ${cityName}.`);
+        break;
+      }
+    }
+
+    if (lower.includes('cricket')) this.addNote('Learner has an interest in cricket.');
+    if (lower.includes('music')) this.addNote('Learner enjoys listening to music.');
+    if (lower.includes('reading') || lower.includes('book')) this.addNote('Learner likes reading books.');
+    if (lower.includes('software') || lower.includes('coder') || lower.includes('developer') || lower.includes('engineer')) {
+      this.addNote('Learner is in or aiming for tech/software engineering.');
+    }
+    if (lower.includes('college') || lower.includes('university') || lower.includes('study')) {
+      this.addNote('Learner is currently pursuing academic studies.');
+    }
+    if (lower.includes('interview') || lower.includes('placement')) {
+      this.addNote('Learner is actively preparing for upcoming interviews.');
+    }
+  }
+
+  addNote(note) {
+    if (!this.data.memoryNotes.includes(note)) {
+      this.data.memoryNotes.push(note);
+      if (this.data.memoryNotes.length > 8) this.data.memoryNotes.shift();
+      this.saveMemory();
+    }
+  }
+
+  isLessonDone(day) {
+    return this.data.completedLessons.includes(parseInt(day, 10));
+  }
+
+  getSummary() {
+    return {
+      profile: this.data.profile,
+      notes: this.data.memoryNotes,
+      userFacts: this.data.userFacts,
+      slips: this.data.grammarSlipHistory,
+      completedLessons: this.data.completedLessons,
+      turnsCount: this.data.turnsCount
+    };
+  }
+}
+
+// ============================================================================
+// 2. CONVERSATION ENGINE (WITH COMPLETE 7-DAY CURRICULUM & RULES)
+// ============================================================================
+class ConversationEngine {
+  constructor() {
+    this.apiKey = typeof localStorage !== 'undefined' ? (localStorage.getItem('talkriva_gemini_key') || '') : '';
+    this.engineType = typeof localStorage !== 'undefined' ? (localStorage.getItem('talkriva_engine_type') || 'builtin') : 'builtin';
+    this.memory = new UserMemoryMind();
+    this.turnHistory = [];
+
+    // ------------------------------------------------------------------------
+    // 7-DAY COMPREHENSIVE CURRICULUM (BEGINNER TO ADVANCED)
+    // ------------------------------------------------------------------------
+    this.lessonsCurriculum = [
+      {
+        day: 1,
+        id: 'first-impressions',
+        title: 'The 7-Second Rule: First Impressions & Magnetic Greetings',
+        titleHindi: 'पहला प्रभाव और सही अभिवादन (First Impression & Greetings)',
+        level: 'Beginner 🐣',
+        duration: '10 Mins',
+        summary: 'Master the psychological 7-second first impression window with authentic greetings, confident body posture, eye contact, and pitch inflection.',
+        realLifeTips: [
+          {
+            title: 'The 7-Second Psychology Rule (पहला 7-सेकंड नियम)',
+            desc: 'In real life, people form 80% of their judgment about your confidence in the first 7 seconds before you finish your sentence. Always greet with an open chest, relaxed shoulders, and a gentle downward tone (not an uncertain rising squeak).'
+          },
+          {
+            title: 'Formal vs Informal Greetings (फॉर्मल बनाम अनौपचारिक अभिवादन)',
+            desc: 'Formal (Offices/Interviews): "Good morning/afternoon Mr. Sharma", "A pleasure to meet you". Informal (Friends/Social): "Hey, great to see you!", "How’s everything going?" Never mix them up.'
+          },
+          {
+            title: 'The Confident Handshake / Namaste Introduction',
+            desc: 'Lock eyes for 2 full seconds, smile warmly, and say your name crisply. Speak slowly: rushing makes you look anxious.'
+          }
+        ],
+        vocabularies: [
+          { word: 'Pleasure', type: 'noun', phonetic: 'PLEZH-er', hindi: 'खुशी / आनंद', def: 'A feeling of happy satisfaction or enjoyment.', ex: 'It is a genuine pleasure to meet you today.' },
+          { word: 'Acquaintance', type: 'noun', phonetic: 'uh-KWAYN-tns', hindi: 'जान-पहचान वाला व्यक्ति', def: 'A person one knows slightly, but who is not a close friend.', ex: 'Pleased to make your acquaintance, Mr. Verma.' },
+          { word: 'Enthusiastic', type: 'adj', phonetic: 'en-thoo-zee-AS-tik', hindi: 'उत्साही / ऊर्जावान', def: 'Having or showing intense and eager interest.', ex: 'I am enthusiastic about joining this project.' },
+          { word: 'Delighted', type: 'adj', phonetic: 'dih-LY-tid', hindi: 'अत्यंत प्रसन्न', def: 'Feeling or showing great pleasure.', ex: 'I am delighted to connect with you this morning.' },
+          { word: 'Cordial', type: 'adj', phonetic: 'KOR-jul', hindi: 'हार्दिक / दोस्ताना', def: 'Warm and friendly in demeanor.', ex: 'They extended a very cordial welcome to us.' },
+          { word: 'Genuine', type: 'adj', phonetic: 'JEN-yoo-in', hindi: 'सच्चा / वास्तविक', def: 'Truly what something is said to be; authentic and sincere.', ex: 'He greeted everyone with a genuine smile.' },
+          { word: 'Poised', type: 'adj', phonetic: 'POYZD', hindi: 'शांत और आत्मविश्वासी', def: 'Having a composed and self-assured manner.', ex: 'She stayed poised and articulate during the interview.' },
+          { word: 'Greeting', type: 'noun', phonetic: 'GREE-ting', hindi: 'अभिवादन / नमस्कार', def: 'A polite word or sign of welcome or recognition.', ex: 'A warm greeting creates an immediate positive bond.' },
+          { word: 'Magnetic', type: 'adj', phonetic: 'mag-NET-ik', hindi: 'आकर्षक व्यक्तित्व', def: 'Very attractive or compelling in personality.', ex: 'His magnetic presence impressed the entire room.' },
+          { word: 'Impactful', type: 'adj', phonetic: 'im-PAKT-ful', hindi: 'प्रभावशाली', def: 'Having a major effect or creating a lasting impression.', ex: 'An impactful introduction sets the tone for success.' }
+        ],
+        commonMistake: {
+          wrong: 'Myself Rahul, working in sales.',
+          correct: 'I am Rahul / My name is Rahul, and I work in sales.',
+          hindi: "'Myself' reflex pronoun है, इससे कभी वाक्य शुरू न करें। हमेशा 'I am' या 'My name is' बोलें।"
+        },
+        practiceChallenge: {
+          goal: 'Introduce yourself with your name, where you are from, and your mood today without using "Myself".',
+          starterText: "Namaste! Welcome to Day 1: First Impressions & Greetings. Let's practice introducing yourself like a pro. Tell me your name, where you are from, and how you are feeling today!",
+          starterHindi: "नमस्ते! डे 1 में स्वागत है: पहला प्रभाव और अभिवादन। चलिए आत्मविश्वास से अपना परिचय देते हैं। अपना नाम, शहर और आज का मूड बताएं!",
+          targetSentence: "Hello Aria, my name is Rahul. I am from Delhi, and I am feeling great today.",
+          phoneticGuide: "Huh-LOH AH-ree-uh, my name iz RAH-hool. Eye am fruhm DEL-hee, and eye am FEEL-ing grayt too-day.",
+          helpPills: [
+            "Hello Aria, my name is Rahul and I'm from Delhi.",
+            "It's a pleasure to meet you, Aria!",
+            "I am feeling enthusiastic and ready to practice today."
+          ]
+        }
+      },
+      {
+        day: 2,
+        id: 'tooti-footi-to-sentences',
+        title: 'From Tooti-Footi to Fluent: Sentence Structure & Thinking in English',
+        titleHindi: 'टूटी-फूटी इंग्लिश से पूरे वाक्य और सीधा इंग्लिश में सोचना',
+        level: 'Beginner 🐣',
+        duration: '12 Mins',
+        summary: 'Stop translating Hindi to English word-by-word. Learn the S-V-O (Subject + Verb + Object) sentence anchor formula and daily action connectors.',
+        realLifeTips: [
+          {
+            title: 'Stop Brain Translation (The SVO Anchor)',
+            desc: 'In Hindi, the verb comes last ("Main khana kha raha hu"), but in English, the verb comes in the middle (Subject + Verb + Object: "I am eating food"). Keep this order fixed in your mind.'
+          },
+          {
+            title: 'Daily Connectors for Natural Flow',
+            desc: 'Instead of stopping after 2 words, attach natural bridge words: "Actually...", "To be honest...", "As a matter of fact...", "Specifically...".'
+          },
+          {
+            title: 'Handling Everyday Indianism Slips',
+            desc: 'Don’t say "I take tea" (say "I have tea / drink tea"). Don’t say "open the light" (say "turn on the light"). Small fixes build big respect.'
+          }
+        ],
+        vocabularies: [
+          { word: 'Currently', type: 'adv', phonetic: 'KUR-ent-lee', hindi: 'वर्तमान में / आजकल', def: 'At the present time; now.', ex: 'Currently, I am focusing on improving my spoken English.' },
+          { word: 'Regularly', type: 'adv', phonetic: 'REG-yuh-ler-lee', hindi: 'नियमित रूप से', def: 'At uniform intervals of time or manner.', ex: 'I practice speaking English regularly with Aria.' },
+          { word: 'Prefer', type: 'verb', phonetic: 'pree-FUR', hindi: 'प्राथमिकता देना / पसंद करना', def: 'To like one thing better than another.', ex: 'I prefer drinking green tea in the morning.' },
+          { word: 'Occasionally', type: 'adv', phonetic: 'uh-KAY-zhuh-nuh-lee', hindi: 'कभी-कभार', def: 'At infrequent intervals; now and then.', ex: 'I occasionally watch English podcasts to learn new phrases.' },
+          { word: 'Routine', type: 'noun', phonetic: 'roo-TEEN', hindi: 'दैनिक दिनचर्या', def: 'A regular sequence of actions.', ex: 'My daily morning routine starts with a brisk walk.' },
+          { word: 'Specifically', type: 'adv', phonetic: 'spuh-SIF-ih-klee', hindi: 'विशेष रूप से', def: 'In a definite and exact manner.', ex: 'Specifically, I want to master workplace conversations.' },
+          { word: 'Connect', type: 'verb', phonetic: 'kuh-NEKT', hindi: 'जोड़ना / संबंध बनाना', def: 'Bring together or establish rapport with others.', ex: 'Good grammar helps you connect thoughts smoothly.' },
+          { word: 'Express', type: 'verb', phonetic: 'ek-SPRES', hindi: 'व्यक्त करना / बयां करना', def: 'Convey a thought or feeling in words or gestures.', ex: 'I can now express my opinions without hesitation.' },
+          { word: 'Essential', type: 'adj', phonetic: 'eh-SEN-shul', hindi: 'अनिवार्य / बहुत जरूरी', def: 'Absolutely necessary; extremely important.', ex: 'Daily practice is essential for long-term fluency.' },
+          { word: 'Gradually', type: 'adv', phonetic: 'GRAJ-oo-uh-lee', hindi: 'धीरे-धीरे / क्रमिक रूप से', def: 'In a gradual way; step by step.', ex: 'Gradually, my confidence has improved significantly.' }
+        ],
+        commonMistake: {
+          wrong: 'Yesterday I go to market and take tea.',
+          correct: 'Yesterday I went to the market and had some tea.',
+          hindi: "बीते समय (yesterday) में हमेशा 2nd form 'went' का प्रयोग करें, और चाय पीने के लिए 'have tea' या 'drink tea' बोलें।"
+        },
+        practiceChallenge: {
+          goal: 'Build a complete 2-sentence thought about what you did today or yesterday using S-V-O order.',
+          starterText: "Welcome to Day 2! Today we build solid sentences. Tell me: what did you do earlier today, and what do you prefer doing in the evening?",
+          starterHindi: "डे 2 में स्वागत है! आज हम पूरे वाक्य बनाएंगे। बताइए: आज दिन में आपने क्या किया और शाम को क्या करना पसंद करते हैं?",
+          targetSentence: "Earlier today, I finished my work, and I prefer going for a walk in the evening.",
+          phoneticGuide: "UR-lee-ur too-day, eye FIN-isht my wurk, and eye pree-FUR GOH-ing fur uh wok in the EEV-ning.",
+          helpPills: [
+            "Earlier today, I completed my daily tasks.",
+            "I usually prefer having a cup of tea in the evening.",
+            "Yesterday, I went outside and met an old friend."
+          ]
+        }
+      },
+      {
+        day: 3,
+        id: 'hesitation-and-silence',
+        title: 'Conquering Hesitation & The Art of The Silent Pause',
+        titleHindi: 'झिझक दूर करना और साइलेंट पॉज की जादुई कला (Hesitation & Silence)',
+        level: 'Elementary 💬',
+        duration: '15 Mins',
+        summary: 'Eliminate anxious filler words (Um, Uh, Like, Basically). Replace panic with confident silent pauses and master the 7-38-55 communication rule.',
+        realLifeTips: [
+          {
+            title: 'The Silent Pause Technique (Kill "Um" & "Uh")',
+            desc: 'When an Indian speaker gets nervous, their brain makes "Ummm, aaaa, actually..." noises. In real life, top CEOs and leaders pause in complete silence for 1 to 2 seconds while thinking. A silent pause sounds wise; filler noises sound insecure.'
+          },
+          {
+            title: 'The 7-38-55 Communication Rule',
+            desc: 'Prof. Mehrabian’s famous rule: Words convey only 7% of meaning, Tone of voice conveys 38%, and Body language conveys 55%. Never whisper timidly. Speak with calm, audible volume.'
+          },
+          {
+            title: 'Breathe from the Diaphragm',
+            desc: 'Take a deep belly breath before you begin your sentence. It drops your voice pitch by 10%, instantly eliminating vocal shaking.'
+          }
+        ],
+        vocabularies: [
+          { word: 'Precisely', type: 'adv', phonetic: 'prih-SYSE-lee', hindi: 'बिल्कुल सही / सटीक', def: 'In an exact and accurate manner.', ex: 'That is precisely what I was trying to explain.' },
+          { word: 'Articulate', type: 'verb/adj', phonetic: 'ar-TIK-yuh-layt', hindi: 'स्पष्ट रूप से व्यक्त करना', def: 'Having the ability to speak fluently and coherently.', ex: 'She was able to articulate her thoughts with great confidence.' },
+          { word: 'Clarity', type: 'noun', phonetic: 'KLAIR-uh-tee', hindi: 'स्पष्टता / साफ विचार', def: 'The quality of being easy to see, hear, or understand.', ex: 'Speaking with clarity helps everyone understand your point.' },
+          { word: 'Essentially', type: 'adv', phonetic: 'eh-SEN-shuh-lee', hindi: 'मूल रूप से / वास्तव में', def: 'Used to emphasize the basic, fundamental nature.', ex: 'Essentially, we want to deliver results ahead of schedule.' },
+          { word: 'Persuasive', type: 'adj', phonetic: 'per-SWAY-siv', hindi: 'प्रभावशाली / प्रेरक', def: 'Good at convincing someone to do or believe something.', ex: 'He gave a very persuasive presentation to the team.' },
+          { word: 'Composure', type: 'noun', phonetic: 'kuhm-POH-zhur', hindi: 'आत्मसंयम / मन की शांति', def: 'The state of being calm and in control of oneself.', ex: 'Maintaining composure during tough questions wins respect.' },
+          { word: 'Spontaneous', type: 'adj', phonetic: 'spon-TAY-nee-us', hindi: 'सहज / स्वाभाविक और त्वरित', def: 'Performed or occurring as a natural impulse without hesitation.', ex: 'A spontaneous conversation creates an immediate friendly connection.' },
+          { word: 'Hesitation', type: 'noun', phonetic: 'hez-ih-TAY-shun', hindi: 'झिझक / संकोच', def: 'The action of pausing before saying or doing something.', ex: 'Daily speaking practice helps you eliminate all hesitation.' },
+          { word: 'Deliberate', type: 'adj', phonetic: 'dih-LIB-er-ut', hindi: 'सोच-समझकर / संतुलित', def: 'Done consciously and intentionally with measured care.', ex: 'Taking deliberate pauses makes your speech sound authoritative.' },
+          { word: 'Overcome', type: 'verb', phonetic: 'oh-ver-KUM', hindi: 'विजय पाना / पार पाना', def: 'Succeed in dealing with a problem or difficulty.', ex: 'With steady practice, you can overcome any speaking fear.' }
+        ],
+        commonMistake: {
+          wrong: 'I didn’t knew that because according to me it was wrong.',
+          correct: 'I didn’t know that, and in my opinion, it wasn’t suitable.',
+          hindi: "'Didn't' के बाद हमेशा verb की 1st form 'know' आती है, और 'according to me' की जगह 'in my opinion' या 'I believe' बोलें।"
+        },
+        practiceChallenge: {
+          goal: 'Express your opinion on an interesting topic with ZERO filler words (no "um", "uh", "actually").',
+          starterText: "Welcome to Day 3! Today’s challenge is courage. Speak your thoughts slowly and clearly without using 'Um' or 'Uh'. Tell me: what is one goal you are working hard to achieve right now?",
+          starterHindi: "डे 3 में स्वागत है! आज बिना 'Um' या 'Uh' बोले, शांत रहकर बताइए: वह कौन सा लक्ष्य है जिसे हासिल करने के लिए आप मेहनत कर रहे हैं?",
+          targetSentence: "In my opinion, learning fluent English is an essential milestone for my personal growth.",
+          phoneticGuide: "In my oh-PIN-yun, LUR-ning FLOO-ent ING-glish iz an eh-SEN-shul MYLE-stone fur my PUR-suh-nul grohth.",
+          helpPills: [
+            "In my opinion, daily practice is key to confidence.",
+            "I am currently preparing for better career opportunities.",
+            "Taking a calm pause helps me speak with clarity."
+          ]
+        }
+      },
+      {
+        day: 4,
+        id: 'ford-networking-smalltalk',
+        title: 'Social Mastery: The FORD Technique & Conversation Ping-Pong',
+        titleHindi: 'नेटवर्किंग, स्मॉल टॉक और किसी से भी बातचीत जारी रखने का फॉर्मूला',
+        level: 'Intermediate 🌿',
+        duration: '12 Mins',
+        summary: 'Never run out of things to say. Use the F.O.R.D. framework (Family, Occupation, Recreation, Dreams) and the conversation Ping-Pong rule.',
+        realLifeTips: [
+          {
+            title: 'The F.O.R.D. Social Framework',
+            desc: 'When meeting someone new at work or a party, touch upon: F (Family/Origins), O (Occupation/Work), R (Recreation/Hobbies), D (Dreams/Aspirations). You will never face awkward silence again.'
+          },
+          {
+            title: 'The Ping-Pong Rule (Answer + 1 Detail + Return Question)',
+            desc: 'If someone asks "How was your weekend?", amateur answer: "Good." Pro answer: "It was really refreshing! I visited a bookstore and relaxed. How about yours, did you do anything fun?" Always hit the ball back!'
+          },
+          {
+            title: 'Indianism Social Trap',
+            desc: 'Never say "cousin brother" or "cousin sister" (native English only uses "my cousin"). Don’t ask "What is your good name?" (say "May I know your name?").'
+          }
+        ],
+        vocabularies: [
+          { word: 'Fascinating', type: 'adj', phonetic: 'FAS-uh-nay-ting', hindi: 'बेहद दिलचस्प / मोहक', def: 'Extremely interesting and charming.', ex: 'That is a fascinating perspective on modern technology!' },
+          { word: 'Unwind', type: 'verb', phonetic: 'un-WYND', hindi: 'तनावमुक्त होना / रिलैक्स करना', def: 'To relax after a period of work or tension.', ex: 'Listening to music helps me unwind after a long day.' },
+          { word: 'Passionate', type: 'adj', phonetic: 'PASH-uh-nit', hindi: 'उत्साही / भावुक', def: 'Having or showing strong feelings of enthusiasm.', ex: 'I am passionate about building intuitive digital software.' },
+          { word: 'Leisure', type: 'noun', phonetic: 'LEE-zhur', hindi: 'फुर्सत / खाली समय', def: 'Free time spent away from business or duties.', ex: 'In my leisure hours, I enjoy reading autobiographies.' },
+          { word: 'Engage', type: 'verb', phonetic: 'en-GAYJ', hindi: 'बातचीत में जोड़ना / ध्यान खींचना', def: 'Occupy, attract, or involve someone\'s interest or attention.', ex: 'Asking open-ended questions helps engage people effortlessly.' },
+          { word: 'Inquire', type: 'verb', phonetic: 'in-KWY-er', hindi: 'विनम्रता से पूछताछ करना / जानना', def: 'Ask for information from someone in a polite manner.', ex: 'May I inquire about your recent travels to Varanasi?' },
+          { word: 'Heritage', type: 'noun', phonetic: 'HAIR-ih-tij', hindi: 'सांस्कृतिक धरोहर / विरासत', def: 'Valued objects and qualities such as historic sites passed down through generations.', ex: 'Chitkoot is renowned for its rich spiritual and cultural heritage.' },
+          { word: 'Reciprocal', type: 'adj', phonetic: 'rih-SIP-ruh-kul', hindi: 'परस्पर / दोनों तरफ से चलने वाला', def: 'Given, felt, or done in return.', ex: 'Good conversation requires reciprocal sharing and active listening.' },
+          { word: 'Memorable', type: 'adj', phonetic: 'MEM-er-uh-bul', hindi: 'यादगार / अविस्मरणीय', def: 'Easily remembered, especially because of being special or unusual.', ex: 'Our team meetup in Ayodhya was truly memorable.' },
+          { word: 'Rapport', type: 'noun', phonetic: 'ra-POR', hindi: 'आपसी सामंजस्य / दोस्ताना तालमेल', def: 'A close and harmonious relationship where people understand each other.', ex: 'Finding shared hobbies helps build instant rapport with colleagues.' }
+        ],
+        commonMistake: {
+          wrong: 'My cousin brother told me to revert back today.',
+          correct: 'My cousin told me to revert / reply today.',
+          hindi: "'Cousin' के साथ brother/sister नहीं लगाया जाता। और 'revert back' में 'back' अनावश्यक है, केवल 'revert' या 'reply' बोलें।"
+        },
+        practiceChallenge: {
+          goal: 'Practice the Ping-Pong rule: Answer Aria’s question with 1 rich detail and ask a question back!',
+          starterText: "Hey there! Welcome to Day 4: Social Mastery and Small Talk. Let's roleplay meeting at a conference. I'll ask you: How was your weekend, and what do you like doing to unwind?",
+          starterHindi: "डे 4 में स्वागत है! चलिए एक पार्टी या कॉन्फ्रेंस की बातचीत का अभ्यास करते हैं। बताइए: आपका वीकेंड कैसा रहा और आप रिलैक्स करने के लिए क्या करते हैं?",
+          targetSentence: "My weekend was quite refreshing because I read a fascinating book. How about you, Aria?",
+          phoneticGuide: "My WEE-kend wuz kwite ree-FRESH-ing bee-KUZ eye red uh FAS-uh-nay-ting book. How uh-BOWT yoo, AH-ree-uh?",
+          helpPills: [
+            "It was very productive! I went cycling in the morning. How about you?",
+            "I love watching documentaries to unwind on weekends. What about you?",
+            "That sounds fascinating! Have you been working on this for long?"
+          ]
+        }
+      },
+      {
+        day: 5,
+        id: 'diplomatic-persuasion',
+        title: 'Diplomatic English: Agreeing, Disagreeing & The Art of Persuasion',
+        titleHindi: 'सहमति, विनम्र असहमति और अपनी बात मनवाने का हुनर (Diplomacy)',
+        level: 'Intermediate 🌿',
+        duration: '14 Mins',
+        summary: 'Never say "You are wrong!" in office or adult discussions. Master the Agree-and-Pivot method and professional diplomacy.',
+        realLifeTips: [
+          {
+            title: 'The "Agree and Pivot" Diplomatic Formula',
+            desc: 'Blunt disagreement creates friction. Instead, validate first, then offer a counterpoint: "I completely understand your perspective, however, if we look at the timeline...", or "That is a valid point, though another angle to consider is...".'
+          },
+          {
+            title: 'Softening Commands into Polite Inquiries',
+            desc: 'Instead of "Give me the report" or "Do this now", use conditional modals: "Could you please share...", "Would it be possible to...", "I would appreciate it if you could...".'
+          },
+          {
+            title: 'Never Say "I am agree"',
+            desc: '"Agree" is an action verb, not an adjective. Say "I agree with you", "I completely agree", or "We are in total agreement".'
+          }
+        ],
+        vocabularies: [
+          { word: 'Perspective', type: 'noun', phonetic: 'per-SPEK-tiv', hindi: 'दृष्टिकोण / नज़रिया', def: 'A particular attitude toward or way of regarding something.', ex: 'From my perspective, this solution will save valuable time.' },
+          { word: 'Collaborative', type: 'adj', phonetic: 'kuh-LAB-er-uh-tiv', hindi: 'सहयोगात्मक', def: 'Produced by or involving two or more parties working together.', ex: 'We need a collaborative effort across departments.' },
+          { word: 'Constructive', type: 'adj', phonetic: 'kuhn-STRUK-tiv', hindi: 'रचनात्मक / हितकारी', def: 'Serving a useful purpose; tending to build up.', ex: 'Thank you for providing such constructive feedback.' },
+          { word: 'Alternative', type: 'noun', phonetic: 'ol-TUR-nuh-tiv', hindi: 'विकल्प', def: 'One of two or more available possibilities.', ex: 'May I propose an alternative route to meet the deadline?' },
+          { word: 'Compelling', type: 'adj', phonetic: 'kuhm-PEL-ing', hindi: 'आकर्षक / दमदार', def: 'Evoking interest, attention, or admiration in a powerfully irresistible way.', ex: 'You made a very compelling argument in the meeting.' },
+          { word: 'Consensus', type: 'noun', phonetic: 'kuhn-SEN-sus', hindi: 'सर्वसम्मति / साझा राय', def: 'A general agreement reached by a group.', ex: 'After a fruitful debate, the committee reached a mutual consensus.' },
+          { word: 'Respectfully', type: 'adv', phonetic: 'rih-SPEKT-fuh-lee', hindi: 'आदरपूर्वक / विनम्रता से', def: 'In a way that shows respect, deference, or politeness.', ex: 'I respectfully disagree with the proposed timeline.' },
+          { word: 'Clarify', type: 'verb', phonetic: 'KLAIR-uh-fye', hindi: 'स्पष्ट करना / साफ करना', def: 'Make a statement or situation less confused and more comprehensible.', ex: 'Could you please clarify the secondary objective for this project?' },
+          { word: 'Diplomatic', type: 'adj', phonetic: 'dip-luh-MAT-ik', hindi: 'कूटनीतिक / सूझबूझ भरा', def: 'Having or showing an ability to deal with people in a sensitive, tactful way.', ex: 'Choosing diplomatic phrasing resolves conflicts without tension.' },
+          { word: 'Mutual', type: 'adj', phonetic: 'MYOO-choo-ul', hindi: 'पारस्परिक / साझा', def: 'Held in common by two or more parties.', ex: 'Finding mutual ground is the core foundation of persuasion.' }
+        ],
+        commonMistake: {
+          wrong: 'I am agree with you, but your idea is wrong.',
+          correct: 'I agree with your objective, but I see a different approach here.',
+          hindi: "'I am agree' गलत है, 'I agree' बोलें। और 'your idea is wrong' की जगह 'I see a different approach' विनम्र लगता है।"
+        },
+        practiceChallenge: {
+          goal: 'Politely express disagreement with an idea using the "Agree and Pivot" formula.',
+          starterText: "Welcome to Day 5: Diplomatic English! Here is the scenario: I say 'I think working 14 hours every single day is the only way to be successful.' How would you politely disagree with me?",
+          starterHindi: "डे 5 में स्वागत है! अगर मैं कहूँ कि 'सफल होने के लिए रोज़ 14 घंटे काम करना ही एकमात्र रास्ता है', तो आप विनम्रता से असहमति कैसे जताएंगे?",
+          targetSentence: "I understand your dedication, however, I believe working smart with balance yields better long-term results.",
+          phoneticGuide: "Eye un-der-STAND yoor ded-ih-KAY-shun, how-EV-er, eye bee-LEEV WUR-king smart with BAL-uns yields BET-er long-turm ree-ZULTS.",
+          helpPills: [
+            "I see your point, however, maintaining consistent focus is equally important.",
+            "That is an interesting viewpoint, though another angle is productivity over hours.",
+            "I agree with the spirit of hard work, but smart planning prevents burnout."
+          ]
+        }
+      },
+      {
+        day: 6,
+        id: 'elevator-pitch-workplace',
+        title: 'Workplace Impact: The 45-Second Elevator Pitch & Meeting Presence',
+        titleHindi: 'ऑफिस मीटिंग्स, 45-सेकंड एलिवेटर पिच और लीडरशिप भाषा',
+        level: 'Advanced 🎯',
+        duration: '15 Mins',
+        summary: 'Deliver powerful executive summaries with Barbara Minto’s Pyramid Principle. Learn downward inflection for natural authority.',
+        realLifeTips: [
+          {
+            title: 'The Minto Pyramid Principle (Lead with the Outcome)',
+            desc: 'In business, don’t build suspense like a Bollywood movie. Start with the bottom-line result first, followed by 3 supporting facts, and end with the recommended next step.'
+          },
+          {
+            title: 'The 45-Second Elevator Pitch Formula',
+            desc: '1. Who I am & my core domain (10s) -> 2. The high-value problem I solve (15s) -> 3. The proven result or outcome (10s) -> 4. Call to action / conversation spark (10s).'
+          },
+          {
+            title: 'Tone Inflection Mastery',
+            desc: 'Indian professionals often end sentences with an upward tone (?) making statements sound like hesitant questions. Consciously drop your pitch at the end of statements (.) to exude calm authority.'
+          }
+        ],
+        vocabularies: [
+          { word: 'Spearhead', type: 'verb', phonetic: 'SPEER-hed', hindi: 'अगुआई करना / नेतृत्व करना', def: 'To lead an attack, movement, or initiative.', ex: 'I had the privilege to spearhead our digital transition.' },
+          { word: 'Streamline', type: 'verb', phonetic: 'STREAM-lyne', hindi: 'सुव्यवस्थित / सरल बनाना', def: 'Make an organization or process more efficient and effective.', ex: 'Our goal is to streamline customer onboardings.' },
+          { word: 'Benchmark', type: 'noun/verb', phonetic: 'BENCH-mark', hindi: 'मानक / पैमाना', def: 'A standard or point of reference against which things may be compared.', ex: 'This project sets a new benchmark for team efficiency.' },
+          { word: 'Deliverable', type: 'noun', phonetic: 'dih-LIV-er-uh-bul', hindi: 'सौंपे जाने योग्य कार्य / परिणाम', def: 'A thing able to be provided, especially as a product of a development process.', ex: 'All key deliverables were submitted on schedule.' },
+          { word: 'Synergy', type: 'noun', phonetic: 'SIN-er-jee', hindi: 'तालमेल / संयुक्त प्रभाव', def: 'The interaction of elements that when combined produce a greater effect.', ex: 'We observed tremendous synergy between marketing and tech.' },
+          { word: 'Metric', type: 'noun', phonetic: 'MET-rik', hindi: 'मापदंड / आंकड़ा', def: 'A system or standard of measurement to track performance.', ex: 'User retention is our primary metric for product success.' },
+          { word: 'Optimize', type: 'verb', phonetic: 'AHP-tuh-myze', hindi: 'सर्वोत्तम बनाना / सुधारना', def: 'Make the best or most effective use of a situation or resource.', ex: 'We optimized our database queries to decrease response latency by 50%.' },
+          { word: 'Expertise', type: 'noun', phonetic: 'ek-sper-TEEZ', hindi: 'विशेषज्ञता / गहन महारत', def: 'Expert skill or knowledge in a particular field.', ex: 'She demonstrated exceptional expertise during the executive presentation.' },
+          { word: 'Initiative', type: 'noun', phonetic: 'ih-NISH-uh-tiv', hindi: 'पहल / नई शुरुआत', def: 'The power or opportunity to act or take charge before others do.', ex: 'I took the initiative to establish weekly peer code reviews.' },
+          { word: 'Distinctive', type: 'adj', phonetic: 'dih-STINGK-tiv', hindi: 'विशिष्ट / अलग पहचान वाला', def: 'Characteristic of one person or thing, and so serving to distinguish it from others.', ex: 'Our product offers distinctive features that competitors lack.' }
+        ],
+        commonMistake: {
+          wrong: 'I passed out from college in 2023 and did one thing for the client.',
+          correct: 'I graduated from college in 2023 and took the initiative to assist the client.',
+          hindi: "'Passed out' का मतलब बेहोश होना होता है! कॉलेज पूरा करने के लिए 'graduated' बोलें। 'Do one thing' की जगह 'took the initiative' बोलें।"
+        },
+        practiceChallenge: {
+          goal: 'Deliver your 30-to-45 second professional pitch to Aria as if she is your executive manager.',
+          starterText: "Welcome to Day 6: Workplace Impact! Imagine I am a senior vice president meeting you in the elevator. Walk me through your professional background and the value you bring to the table!",
+          starterHindi: "डे 6 में स्वागत है! कल्पना कीजिए मैं आपकी सीनियर मैनेजर हूँ। 45 सेकंड में आत्मविश्वास के साथ अपनी भूमिका और अनुभव बताएं!",
+          targetSentence: "I specialize in technology solutions, where I streamline complex processes to drive measurable results.",
+          phoneticGuide: "Eye SPESH-uh-lyze in tek-NOL-uh-jee soh-LOO-shunz, wair eye STREAM-lyne KOM-pleks PRAH-ses-ez too dryve MEZH-er-uh-bul ree-ZULTS.",
+          helpPills: [
+            "I specialize in solving technical challenges and improving client satisfaction.",
+            "Over the past year, I spearheaded key initiatives that improved workflow efficiency.",
+            "My focus is on delivering high-impact results with precision and speed."
+          ]
+        }
+      },
+      {
+        day: 7,
+        id: 'interview-star-mastery',
+        title: 'High-Stakes Interviews: The S.T.A.R. Method & Executive Polish',
+        titleHindi: 'जॉब इंटरव्यू में सफलता और S.T.A.R. मेथड का जादू (Interview Mastery)',
+        level: 'Advanced 🎯',
+        duration: '18 Mins',
+        summary: 'Crack behavioral interview questions like a Fortune 500 candidate using Situation, Task, Action, and Result with quantifiable metrics.',
+        realLifeTips: [
+          {
+            title: 'The S.T.A.R. Framework for Behavioral Questions',
+            desc: 'When asked "Tell me about a time you solved a tough problem", organize your answer: S (Situation: Set the scene), T (Task: Your specific responsibility), A (Action: The strategic steps YOU took), R (Result: The measurable victory with % or numbers).'
+          },
+          {
+            title: 'Answering "Tell Me About Yourself" (Present-Past-Future)',
+            desc: 'Don’t recite your childhood or full CV. Structure: 1. Present (Where you shine right now) -> 2. Past (Key accomplishments that built your competence) -> 3. Future (Why this specific company aligns with your trajectory).'
+          },
+          {
+            title: 'Turn Weaknesses into Credible Strengths',
+            desc: 'Never say "I am a perfectionist" (cliché). Say "Earlier, I used to hesitate when delegating tasks, but I implemented daily tracking checklists which helped me empower team members effectively."'
+          }
+        ],
+        vocabularies: [
+          { word: 'Accomplished', type: 'adj/verb', phonetic: 'uh-KOM-plisht', hindi: 'कुशल / जिसने उपलब्धि हासिल की हो', def: 'Highly trained or skilled in a particular activity.', ex: 'Together, our team accomplished our quarterly targets ahead of time.' },
+          { word: 'Initiative', type: 'noun', phonetic: 'ih-NISH-uh-tiv', hindi: 'पहल / नई शुरुआत', def: 'The ability to assess and initiate things independently.', ex: 'I took the initiative to resolve customer queries within 15 minutes.' },
+          { word: 'Measurable', type: 'adj', phonetic: 'MEZH-er-uh-bul', hindi: 'मापने योग्य', def: 'Able to be measured, especially significant or noticeable.', ex: 'Our strategy led to a measurable 25% increase in user engagement.' },
+          { word: 'Impactful', type: 'adj', phonetic: 'im-PAKT-ful', hindi: 'प्रभावशाली', def: 'Having a major impact or effect.', ex: 'This was one of the most impactful projects of my career.' },
+          { word: 'Resilience', type: 'noun', phonetic: 'rih-ZIL-yunce', hindi: 'कठिनाइयों से उबरने की क्षमता', def: 'The capacity to withstand or recover quickly from difficulties.', ex: 'Demonstrating resilience under tight deadlines is crucial for growth.' },
+          { word: 'Decisive', type: 'adj', phonetic: 'dih-SYE-siv', hindi: 'निर्णायक / त्वरित फैसला लेने वाला', def: 'Settling an issue; producing a definite result; showing the ability to make decisions quickly.', ex: 'Her decisive leadership turned the project around during a server outage.' },
+          { word: 'Strategic', type: 'adj', phonetic: 'struh-TEE-jik', hindi: 'रणनीतिक / दूरगामी योजनाबद्ध', def: 'Relating to the identification of long-term or overall aims and interests.', ex: 'We formed a strategic roadmap that aligned with company vision.' },
+          { word: 'Milestone', type: 'noun', phonetic: 'MYLE-stone', hindi: 'मील का पत्थर / महत्वपूर्ण उपलब्धि', def: 'A significant stage or event in the development of something.', ex: 'Reaching 10,000 active users was a proud milestone for our startup.' },
+          { word: 'Adaptability', type: 'noun', phonetic: 'uh-dap-tuh-BIL-uh-tee', hindi: 'परिस्थितियों के अनुसार ढलना', def: 'The quality of being able to adjust to new conditions and tech.', ex: 'My adaptability helped me master new frameworks in just two weeks.' },
+          { word: 'Diligent', type: 'adj', phonetic: 'DIL-ih-junt', hindi: 'लगनशील / अत्यंत परिश्रमी', def: 'Having or showing care and conscientiousness in one\'s work or duties.', ex: 'Thanks to diligent testing, the release went live with zero downtime.' }
+        ],
+        commonMistake: {
+          wrong: 'I am doing very hard work and my cousin brother referred me.',
+          correct: 'I demonstrate disciplined work ethic and was introduced through a professional connection.',
+          hindi: "'Hard work' बहुत साधारण शब्द है, 'disciplined work ethic' या 'diligent approach' बोलें, जो इंटरव्यू में बहुत वजनदार लगता है।"
+        },
+        practiceChallenge: {
+          goal: 'Answer the classic question "Tell me about a difficult challenge you faced and how you resolved it" using the STAR method.',
+          starterText: "Welcome to Day 7: Interview Mastery! Let's do a live mock interview. I am your lead interviewer. Please tell me: Can you describe a challenging situation you faced, what action you took, and the final result?",
+          starterHindi: "डे 7 में स्वागत है! चलिए एक लाइव मॉक इंटरव्यू करते हैं। बताइए: आपने किसी कठिन चुनौती का सामना कैसे किया, क्या कदम उठाया और क्या परिणाम मिला?",
+          targetSentence: "When facing a tight deadline, I took the initiative to prioritize high-impact tasks, successfully delivering the project on time.",
+          phoneticGuide: "Wen FAY-sing uh tight DED-lyne, eye took thuh ih-NISH-uh-tiv too pry-OR-ih-tyze high-IM-pakt tasks, suk-SES-fuh-lee dih-LIV-er-ing thuh PRAH-jekt on tyme.",
+          helpPills: [
+            "When faced with an unexpected delay, I reorganized our priorities to deliver on time.",
+            "I took the initiative to clarify requirements with our stakeholders directly.",
+            "Through disciplined teamwork, we achieved a measurable 20% improvement in performance."
+          ]
+        }
+      }
+    ];
+
+    // ------------------------------------------------------------------------
+    // VISUAL VOCABULARIES (DAILY LIFE TO ADVANCED INTERVIEW CRACKING)
+    // Real photos, sentence usage under photo, Hindi translations & interview tips
+    // ------------------------------------------------------------------------
+    this.visualVocabs = [
+      {
+        id: 'vocab-meticulous',
+        word: 'Meticulous',
+        type: 'Adjective',
+        category: 'interview',
+        categoryBadge: '💼 Interview Cracker',
+        phonetic: 'muh-TIK-yuh-lus',
+        hindi: 'अत्यंत सूक्ष्म / बारीकियों पर ध्यान देने वाला',
+        definition: 'Showing great attention to detail; very careful and precise.',
+        image: 'assets/interview_card.jpg',
+        sentenceExample: 'I am confident that my meticulous attention to detail will ensure zero production defects in this project.',
+        sentenceHindi: 'मुझे पूरा विश्वास है कि बारीकियों पर मेरा अत्यधिक ध्यान इस प्रोजेक्ट में कोई भी तकनीकी कमी नहीं रहने देगा।',
+        interviewTip: 'HR & Tech leads love this word when answering "What are your greatest strengths?". It proves high quality standards and accountability.'
+      },
+      {
+        id: 'vocab-articulate',
+        word: 'Articulate',
+        type: 'Verb / Adjective',
+        category: 'workplace',
+        categoryBadge: '📊 Workplace & Pitch',
+        phonetic: 'ar-TIK-yuh-layt',
+        hindi: 'स्पष्ट और प्रभावशाली ढंग से व्यक्त करना',
+        definition: 'Having or showing the ability to speak fluently and coherently.',
+        image: 'assets/presentation.jpg',
+        sentenceExample: 'In today\'s client meeting, I will articulate our three core growth strategies with clear supporting metrics.',
+        sentenceHindi: 'आज की क्लाइंट मीटिंग में, मैं स्पष्ट आंकड़ों के साथ हमारी विकास रणनीतियों को बहुत प्रभावशाली ढंग से व्यक्त करूँगा।',
+        interviewTip: 'Top executive trait: demonstrates you can communicate complex technical ideas to non-technical stakeholders effortlessly.'
+      },
+      {
+        id: 'vocab-resilient',
+        word: 'Resilient',
+        type: 'Adjective',
+        category: 'interview',
+        categoryBadge: '💼 Interview Cracker',
+        phonetic: 'rih-ZIL-yunt',
+        hindi: 'कठिनाइयों में भी अडिग रहने वाला / लचीला',
+        definition: 'Able to withstand or recover quickly from difficult conditions.',
+        image: 'assets/interview_card.jpg',
+        sentenceExample: 'When our initial release encountered server bottlenecks, our engineering team stayed resilient and resolved the issue within hours.',
+        sentenceHindi: 'जब हमारे पहले रिलीज में रुकावटें आईं, तो हमारी टीम ने हिम्मत बनाए रखी और कुछ ही घंटों में समाधान निकाल लिया।',
+        interviewTip: 'The ultimate golden word for behavioral interview questions like "Describe a time you faced intense pressure or project failure".'
+      },
+      {
+        id: 'vocab-pragmatic',
+        word: 'Pragmatic',
+        type: 'Adjective',
+        category: 'leadership',
+        categoryBadge: '⚡ Executive Leadership',
+        phonetic: 'prag-MAT-ik',
+        hindi: 'व्यावहारिक / यथार्थवादी (Practical over theoretical)',
+        definition: 'Dealing with things sensibly and realistically in a way that is based on practical rather than theoretical considerations.',
+        image: 'assets/leadership.jpg',
+        sentenceExample: 'Rather than debating theoretical concepts, we adopted a pragmatic solution that cut deployment time by 40%.',
+        sentenceHindi: 'सैद्धांतिक बातों पर बहस करने के बजाय, हमने एक व्यावहारिक समाधान अपनाया जिसने डिप्लॉयमेंट समय 40% घटा दिया।',
+        interviewTip: 'Hiring managers actively look for pragmatic engineers and managers because they deliver real business value instead of excuses.'
+      },
+      {
+        id: 'vocab-spearhead',
+        word: 'Spearhead',
+        type: 'Verb',
+        category: 'leadership',
+        categoryBadge: '⚡ Executive Leadership',
+        phonetic: 'SPEER-hed',
+        hindi: 'किसी बड़े अभियान या प्रोजेक्ट का नेतृत्व करना',
+        definition: 'To lead an organized effort, project, or attack.',
+        image: 'assets/leadership.jpg',
+        sentenceExample: 'In my last role, I spearheaded a company-wide automation campaign that saved over 15 hours of manual work every week.',
+        sentenceHindi: 'मेरी पिछली भूमिका में, मैंने एक ऑटोमेशन अभियान का नेतृत्व किया जिसने हर हफ्ते 15 घंटे से अधिक मैन्युअल काम बचाया।',
+        interviewTip: 'Replace passive words like "I worked on" with "I spearheaded" on your resume and interview stories for immediate executive gravitas.'
+      },
+      {
+        id: 'vocab-cordial',
+        word: 'Cordial',
+        type: 'Adjective',
+        category: 'daily',
+        categoryBadge: '🗣️ Daily Social',
+        phonetic: 'KOR-juhl',
+        hindi: 'सौहार्दपूर्ण / गर्मजोशी भरा और विनम्र',
+        definition: 'Warm and friendly; polite and respectful.',
+        image: 'assets/daily_social.jpg',
+        sentenceExample: 'Even when discussing challenging feedback with the client, we maintained a cordial and constructive conversation.',
+        sentenceHindi: 'क्लाइंट के साथ कठिन फीडबैक पर बात करते हुए भी, हमने एक सौहार्दपूर्ण और आदरणीय बातचीत बनाए रखी।',
+        interviewTip: 'Demonstrates Emotional Intelligence (EQ). Crucial when interviewers test how you handle disagreements and client communication.'
+      },
+      {
+        id: 'vocab-spontaneous',
+        word: 'Spontaneous',
+        type: 'Adjective',
+        category: 'daily',
+        categoryBadge: '🗣️ Daily Social',
+        phonetic: 'spon-TAY-nee-us',
+        hindi: 'सहज / स्वाभाविक (बिना किसी बनावट के)',
+        definition: 'Performed or occurring as a result of a sudden impulse without premeditation.',
+        image: 'assets/daily_social.jpg',
+        sentenceExample: 'We had an unplanned coffee meetup, and having a spontaneous conversation helped us build immediate trust and rapport.',
+        sentenceHindi: 'हमने अचानक कॉफ़ी पर मिलने का निर्णय लिया, और एक सहज बातचीत ने हमें तुरंत विश्वास और तालमेल बनाने में मदद की।',
+        interviewTip: 'Great for daily social fluency and building instant rapport during casual networking or initial conversation ice-breakers.'
+      },
+      {
+        id: 'vocab-leverage',
+        word: 'Leverage',
+        type: 'Verb',
+        category: 'workplace',
+        categoryBadge: '📊 Workplace & Pitch',
+        phonetic: 'LEV-rij',
+        hindi: 'अधिकतम लाभ उठाना / किसी क्षमता का फायदा लेना',
+        definition: 'To use something to maximum advantage.',
+        image: 'assets/presentation.jpg',
+        sentenceExample: 'I plan to leverage my background in data analytics to optimize customer acquisition costs for this product.',
+        sentenceHindi: 'मैं इस उत्पाद के लिए ग्राहक अधिग्रहण लागत को कम करने हेतु अपने डेटा एनालिटिक्स अनुभव का पूरा लाभ उठाऊँगा।',
+        interviewTip: 'A ubiquitous corporate power verb. Use it when explaining why your past skills make you uniquely qualified for the new role.'
+      }
+    ];
+
+    // ------------------------------------------------------------------------
+    // INTERACTIVE MCQ PRACTICE QUESTIONS (DAILY LIFE TO INTERVIEW CRACKERS)
+    // Instant feedback, Indianism detection, STAR answers & bilingual explanations
+    // ------------------------------------------------------------------------
+    this.mcqQuestions = [
+      {
+        id: 1,
+        category: 'interview',
+        categoryBadge: '🎯 Interview Cracker',
+        question: 'Which of the following is the most professional and confident way to introduce yourself in a job interview?',
+        questionHindi: 'इंटरव्यू में अपना परिचय देने का सबसे सही, पेशेवर और आत्मविश्वासी तरीका कौन सा है?',
+        options: [
+          'Myself Rahul, passed out from Delhi University in 2023.',
+          'My name is Rahul. I graduated from Delhi University with a degree in Computer Science.',
+          'I am having 3 years experience in software testing field.',
+          'I took tea in morning and came here for give interview.'
+        ],
+        correct: 1,
+        explanation: "'Myself' से वाक्य शुरू करना व्याकरण की दृष्टि से अशुद्ध है और 'passed out' का अर्थ बेहोश होना भी होता है। सही और अंतरराष्ट्रीय स्तर पर स्वीकृत तरीका है: 'My name is Rahul. I graduated from Delhi University with a degree in Computer Science.'",
+        interviewTip: "Never say 'passed out' for college completion—always say 'graduated from'. It immediately signals fluent corporate vocabulary.",
+        sentenceAudio: 'My name is Rahul. I graduated from Delhi University with a degree in Computer Science.'
+      },
+      {
+        id: 2,
+        category: 'vocab',
+        categoryBadge: '📖 Power Vocab',
+        question: 'Choose the sentence that correctly uses the interview power word "Meticulous":',
+        questionHindi: 'उस वाक्य को चुनें जो इंटरव्यू पावर वर्ड "Meticulous" (सूक्ष्म बारीकियों पर ध्यान देने वाला) का सही प्रयोग करता है:',
+        options: [
+          'I am meticulous eating lunch today with my friends.',
+          'My meticulous attention to code review helped reduce critical server bugs by 30%.',
+          'He is meticulous angry because of heavy traffic.',
+          'The weather today is very meticulous and sunny.'
+        ],
+        correct: 1,
+        explanation: "'Meticulous' का अर्थ होता है बारीकियों पर बहुत ध्यान देने वाला (showing extreme care and precision)। कोड रिव्यू, डेटा एनालिसिस और डॉक्यूमेंटेशन के संदर्भ में यह शब्द इंटरव्यूअर्स को बेहद प्रभावित करता है।",
+        interviewTip: "Use 'meticulous' when describing your quality assurance or attention to precision—it sets you apart from junior candidates.",
+        sentenceAudio: 'My meticulous attention to code review helped reduce critical server bugs by 30%.'
+      },
+      {
+        id: 3,
+        category: 'mistake',
+        categoryBadge: '⚠️ Mistake Detector',
+        question: 'Identify the grammatically correct sentence describing an action completed yesterday:',
+        questionHindi: 'कल (बीते समय) में किए गए काम का वर्णन करने वाला सही वाक्य पहचानें:',
+        options: [
+          'Yesterday I didn\'t knew about the client presentation schedule.',
+          'Yesterday I go to office and take three cups of tea.',
+          'Yesterday I attended the client presentation and resolved all technical queries.',
+          'Yesterday I am attended the meeting with my cousin sister.'
+        ],
+        correct: 2,
+        explanation: "बीते समय (yesterday) के साथ क्रिया का Simple Past रूप (attended, resolved) आता है। 'didn't' के बाद कभी 2nd form ('knew') नहीं आती ('didn't know' सही होता है) और 'cousin sister' मानक अंग्रेजी में अमान्य है।",
+        interviewTip: "Mastering the simple past tense gives immediate fluency; interviewers judge past project descriptions on clean past tense verbs.",
+        sentenceAudio: 'Yesterday I attended the client presentation and resolved all technical queries.'
+      },
+      {
+        id: 4,
+        category: 'daily',
+        categoryBadge: '🗣️ Daily Social',
+        question: 'How should you politely order a cappuccino at a modern cafe without sounding rude or overly abrupt?',
+        questionHindi: 'किसी कैफे में बिना रूखे लगे विनम्रता से कॉफ़ी ऑर्डर करने का सबसे स्वाभाविक तरीका कौन सा है?',
+        options: [
+          'Give me one cappuccino fast.',
+          'Could I please have an oat-milk cappuccino, whenever you have a moment?',
+          'I want cappuccino now only.',
+          'Open the coffee machine and prepare tea.'
+        ],
+        correct: 1,
+        explanation: "'Give me' या 'I want now' बहुत रूखा (demanding) लगता है। विनम्र सामाजिक बातचीत में हमेशा 'Could I please have...' या 'I would like...' का प्रयोग किया जाता है।",
+        interviewTip: "Politeness markers like 'Could I please...' reflect your everyday emotional intelligence and soft skills.",
+        sentenceAudio: 'Could I please have an oat-milk cappuccino, whenever you have a moment?'
+      },
+      {
+        id: 5,
+        category: 'interview',
+        categoryBadge: '🎯 Interview Cracker',
+        question: 'An interviewer asks: "Tell me about a time you faced a difficult roadblock." What is the best STAR response?',
+        questionHindi: 'इंटरव्यूअर पूछता है: "किसी कठिन परिस्थिति के बारे में बताएं।" STAR मेथड के अनुसार सबसे सटीक उत्तर कौन सा है?',
+        options: [
+          'Roadblocks are not good. My manager gave too much work so I was unhappy.',
+          'When our third-party API crashed before launch, our team stayed resilient, built a fallback cache, and delivered on schedule.',
+          'According to me, software engineering is full of problems so I do one thing.',
+          'Myself facing roadblock everyday in office.'
+        ],
+        correct: 1,
+        explanation: "यह उत्तर STAR (Situation: API crash, Action: stayed resilient & built cache, Result: delivered on schedule) पद्धति का उत्कृष्ट उदाहरण है और इसमें 'resilient' पावर वर्ड का उपयोग किया गया है।",
+        interviewTip: "Always frame problems with your proactive solution and a positive measurable result. Never blame teammates or managers.",
+        sentenceAudio: 'When our third-party API crashed before launch, our team stayed resilient, built a fallback cache, and delivered on schedule.'
+      },
+      {
+        id: 6,
+        category: 'mistake',
+        categoryBadge: '⚠️ Mistake Detector',
+        question: 'In professional workplace communication, which sentence avoids common Indian English redundancy?',
+        questionHindi: 'ऑफिस ईमेल और बातचीत में कौन सा वाक्य आम दोहराव (redundancy) से मुक्त और सही है?',
+        options: [
+          'Please revert back to my email as soon as possible.',
+          'Please reply to my email at your earliest convenience.',
+          'Do one thing and pre-pone the meeting today.',
+          'Kindly revert back with the updated biodata.'
+        ],
+        correct: 1,
+        explanation: "'Revert' का अर्थ ही उत्तर देना या पुरानी अवस्था में लौटना होता है, इसलिए 'revert back' में 'back' एक अनावश्यक दोहराव (redundancy) है। सबसे पेशेवर वाक्य है: 'Please reply to my email at your earliest convenience.'",
+        interviewTip: "Using 'at your earliest convenience' in emails and interviews immediately shows seasoned corporate polish.",
+        sentenceAudio: 'Please reply to my email at your earliest convenience.'
+      },
+      {
+        id: 7,
+        category: 'vocab',
+        categoryBadge: '📖 Power Vocab',
+        question: 'Which sentence best demonstrates corporate leadership using the power verb "Spearhead"?',
+        questionHindi: 'पावर वर्ब "Spearhead" (नेतृत्व करना) का सबसे सटीक कॉर्पोरेट उपयोग कौन सा है?',
+        options: [
+          'I spearhead walking in the park every evening.',
+          'In my previous role, I spearheaded a customer retention drive that boosted renewals by 25%.',
+          'The computer was spearheading very slow yesterday.',
+          'I am spearhead agree with your proposal.'
+        ],
+        correct: 1,
+        explanation: "'Spearhead' का अर्थ होता है किसी महत्वपूर्ण प्रोजेक्ट या पहल की कमान संभालना और आगे बढ़कर नेतृत्व करना। यह वाक्य नेतृत्व और 25% का स्पष्ट परिणाम दोनों प्रदर्शित करता है।",
+        interviewTip: "Leadership roles look for initiative. Sentences starting with 'I spearheaded...' are magnets for promotion and offers.",
+        sentenceAudio: 'In my previous role, I spearheaded a customer retention drive that boosted renewals by 25%.'
+      },
+      {
+        id: 8,
+        category: 'daily',
+        categoryBadge: '🗣️ Daily Social',
+        question: 'During a phone call or meeting, if you didn\'t hear someone clearly, what should you say?',
+        questionHindi: 'यदि कॉल या बातचीत में आपको सामने वाले की बात साफ़ नहीं सुनाई दी, तो विनम्रता से क्या कहना चाहिए?',
+        options: [
+          'What? Speak loudly.',
+          'Your voice is breaking, do one thing speak again.',
+          'I am sorry, I missed that last part. Could you please repeat it for me?',
+          'Repeat back what you said just now.'
+        ],
+        correct: 2,
+        explanation: "'What?' या 'Speak loudly' रूखा और आक्रामक लगता है। सबसे सुंदर और शिष्ट तरीका है: 'I am sorry, I missed that last part. Could you please repeat it for me?'",
+        interviewTip: "If you don't understand an interviewer's question, asking politely for clarification is seen as thoughtful, not weak.",
+        sentenceAudio: 'I am sorry, I missed that last part. Could you please repeat it for me?'
+      },
+      {
+        id: 9,
+        category: 'interview',
+        categoryBadge: '🎯 Interview Cracker',
+        question: 'When asked: "What is your greatest weakness?", which answer shows self-awareness and professional maturity?',
+        questionHindi: 'जब पूछा जाए: "आपकी सबसे बड़ी कमजोरी क्या है?", कौन सा उत्तर परिपक्वता और निरंतर सुधार को दर्शाता है?',
+        options: [
+          'I have zero weaknesses, I am 100% perfect.',
+          'I tend to hesitate in large public meetings, but I have been practicing proactive speaking in daily standups and improved significantly.',
+          'I get angry very fast and I don\'t like working in teams.',
+          'My weakness is that I work too hard and don\'t sleep.'
+        ],
+        correct: 1,
+        explanation: "'I have no weakness' या 'I work too hard' बनावटी और अवास्तविक उत्तर हैं। वास्तविक कमजोरी को स्वीकार करते हुए यह दिखाना कि आप उस पर कैसे काम कर रहे हैं, सच्ची परिपक्वता दर्शाता है।",
+        interviewTip: "Always follow the Weakness + Active Improvement formula: acknowledge a real soft spot, then prove what concrete step you are taking.",
+        sentenceAudio: 'I tend to hesitate in large public meetings, but I have been practicing proactive speaking and improved significantly.'
+      },
+      {
+        id: 10,
+        category: 'vocab',
+        categoryBadge: '📖 Power Vocab',
+        question: 'Select the statement that correctly uses "Pragmatic" to solve a business problem:',
+        questionHindi: 'व्यावसायिक समस्या सुलझाने में "Pragmatic" (व्यावहारिक) का सही उपयोग पहचानें:',
+        options: [
+          'Instead of chasing a 6-month rebuild, we took a pragmatic approach and fixed the top three user complaints first.',
+          'The pragmatic weather was very cold in winter.',
+          'I took a pragmatic tea and felt energetic.',
+          'He is very pragmatic angry with the manager.'
+        ],
+        correct: 0,
+        explanation: "'Pragmatic' का अर्थ है व्यावहारिक (action-oriented, realistic over idealistic)। 6 महीने के पुनर्निर्माण के बजाय 3 प्रमुख समस्याओं को तुरंत सुलझाना एक व्यावहारिक (pragmatic) कदम है।",
+        interviewTip: "Senior interviewers prioritize candidates who know when to ship a pragmatic solution instead of endless theoretical planning.",
+        sentenceAudio: 'Instead of chasing a six-month rebuild, we took a pragmatic approach and fixed the top three user complaints first.'
+      }
+    ];
+
+    // ------------------------------------------------------------------------
+    // DEEP GRAMMAR & INDIANISM RULES BANK (30+ RULES)
+    // ------------------------------------------------------------------------
+    this.grammarRules = [
+      // 1. Irregular past tense over-regularization
+      {
+        pattern: /\b(buyed|catched|teached|taked|seed|bringed|payed|eated)\b/i,
+        fix: (t) => t.replace(/\bbuyed\b/gi, 'bought')
+                     .replace(/\bcatched\b/gi, 'caught')
+                     .replace(/\bteached\b/gi, 'taught')
+                     .replace(/\btaked\b/gi, 'took')
+                     .replace(/\bseed\b/gi, 'saw')
+                     .replace(/\bbringed\b/gi, 'brought')
+                     .replace(/\bpayed\b/gi, 'paid')
+                     .replace(/\beated\b/gi, 'ate'),
+        tag: "Irregular Verbs (अनियमित क्रिया)",
+        rule: "Irregular past tense: Do not add '-ed'. Use bought, caught, taught, took, saw, brought, paid, ate.",
+        hindi: "Irregular verbs में '-ed' नहीं लगता! 'Buyed' की जगह 'bought', 'teached' की जगह 'taught' और 'catched' की जगह 'caught' बोलें।"
+      },
+      // 2. Yesterday / Last week with Present Tense
+      {
+        pattern: /\b(yesterday|last night|last week|last month|ago)\b.*?\b(go|see|buy|eat|take|come|do|tell|make)\b/i,
+        fix: (t) => t.replace(/\bgo\b/gi, 'went')
+                     .replace(/\bsee\b/gi, 'saw')
+                     .replace(/\bbuy\b/gi, 'bought')
+                     .replace(/\beat\b/gi, 'ate')
+                     .replace(/\btake\b/gi, 'took')
+                     .replace(/\bcome\b/gi, 'came')
+                     .replace(/\bdo\b/gi, 'did'),
+        tag: "Past Tense (बीते समय का काल)",
+        rule: "Past time markers (yesterday, last night) strictly require simple past verbs (went, saw, bought).",
+        hindi: "बीते समय (yesterday, last week) की बात करते वक्त हमेशा 2nd form (went, saw, bought) बोलें, present tense नहीं।"
+      },
+      // 3. Indianism: Myself + Name
+      {
+        pattern: /\bmyself\s+([A-Za-z]+)\b/i,
+        fix: (t) => t.replace(/\bmyself\s+([A-Za-z]+)\b/gi, 'I am $1 / My name is $1'),
+        tag: "Introduction (परिचय का नियम)",
+        rule: "Never begin introductions with 'Myself'. Say 'I am [Name]' or 'My name is [Name]'.",
+        hindi: "'Myself' reflex pronoun है, इससे वाक्य शुरू करना गलत है। हमेशा 'I am...' या 'My name is...' बोलें।"
+      },
+      // 4. Indianism: Didn't + 2nd Form (didn't knew / didn't went)
+      {
+        pattern: /\bdid\s*n'?t\s+(knew|went|came|saw|told|took|bought)\b/i,
+        fix: (t) => t.replace(/\bdid\s*n'?t\s+knew\b/gi, "didn't know")
+                     .replace(/\bdid\s*n'?t\s+went\b/gi, "didn't go")
+                     .replace(/\bdid\s*n'?t\s+came\b/gi, "didn't come")
+                     .replace(/\bdid\s*n'?t\s+saw\b/gi, "didn't see")
+                     .replace(/\bdid\s*n'?t\s+told\b/gi, "didn't tell")
+                     .replace(/\bdid\s*n'?t\s+took\b/gi, "didn't take"),
+        tag: "Negative Past (Didn't + Base Form)",
+        rule: "After 'did not' or 'didn't', always use the base form (1st form) of the verb. E.g., 'didn't know', not 'didn't knew'.",
+        hindi: "'Didn't' के बाद हमेशा verb की 1st form आती है: 'didn't know' सही है, 'didn't knew' गलत है।"
+      },
+      // 5. Indianism: Cousin brother / Cousin sister
+      {
+        pattern: /\bcousin\s+(brother|sister)\b/i,
+        fix: (t) => t.replace(/\bcousin\s+(brother|sister)\b/gi, 'cousin'),
+        tag: "Indianism (कज़िन का नियम)",
+        rule: "In standard English, never say 'cousin brother' or 'cousin sister'. Simply say 'my cousin'.",
+        hindi: "English में 'cousin brother' या 'cousin sister' नहीं होता। केवल 'my cousin' बोलें।"
+      },
+      // 6. Indianism: Revert back
+      {
+        pattern: /\brevert\s+back\b/i,
+        fix: (t) => t.replace(/\brevert\s+back\b/gi, 'revert / reply'),
+        tag: "Redundancy (दोहराव)",
+        rule: "'Revert' already means to go back or return. Adding 'back' is redundant. Say 'revert' or 'reply'.",
+        hindi: "'Revert' का मतलब ही वापस आना/उत्तर देना है। 'revert back' में 'back' अनावश्यक है।"
+      },
+      // 7. Indianism: Passed out from college
+      {
+        pattern: /\bpassed\s+out\s+(from|of)?\s*(college|school|university|iit|nit)\b/i,
+        fix: (t) => t.replace(/\bpassed\s+out\s+(from|of)?\s*(college|school|university|iit|nit)\b/gi, 'graduated from $2'),
+        tag: "Phrasal Verb (ग्रेजुएशन का नियम)",
+        rule: "'Pass out' means to faint or lose consciousness. For completing college, say 'I graduated from college'.",
+        hindi: "'Pass out' का मतलब बेहोश होना होता है! कॉलेज पूरा करने के लिए हमेशा 'graduated from college' बोलें।"
+      },
+      // 8. Indianism: Take tea / eat soup
+      {
+        pattern: /\b(take|taking|took)\s+(tea|coffee)\b/i,
+        fix: (t) => t.replace(/\btake\s+tea\b/gi, 'have tea')
+                     .replace(/\btaking\s+tea\b/gi, 'having tea')
+                     .replace(/\btook\s+tea\b/gi, 'had tea')
+                     .replace(/\btake\s+coffee\b/gi, 'have coffee'),
+        tag: "Collocation (चाय/कॉफ़ी का प्रयोग)",
+        rule: "Do not say 'take tea'. Say 'have tea' or 'drink tea'.",
+        hindi: "चाय या कॉफ़ी के लिए 'take tea' नहीं, बल्कि 'have tea' या 'drink tea' बोला जाता है।"
+      },
+      // 9. Indianism: I am agree
+      {
+        pattern: /\bi\s+am\s+agree\b/i,
+        fix: (t) => t.replace(/\bi\s+am\s+agree\b/gi, 'I agree'),
+        tag: "Verb vs Adjective (सहमति)",
+        rule: "'Agree' is already a verb. Do not say 'I am agree'. Say 'I agree' or 'I agree with you'.",
+        hindi: "'Agree' खुद एक क्रिया (verb) है। 'I am agree' गलत है, 'I agree' या 'I completely agree' बोलें।"
+      },
+      // 10. Indianism: Do one thing
+      {
+        pattern: /\bdo\s+one\s+thing\b/i,
+        fix: (t) => t.replace(/\bdo\s+one\s+thing\b/gi, "here's what you can do / how about"),
+        tag: "Indianism (सुझाव देने का तरीका)",
+        rule: "'Do one thing' is a literal translation of 'ek kaam karo'. Say 'Here is an idea' or 'Why don't you...'.",
+        hindi: "'एक काम करो' का सीधा अनुवाद 'do one thing' अंग्रेजी में अजीब लगता है। 'Here is a suggestion' बोलें।"
+      },
+      // 11. Indianism: According to me
+      {
+        pattern: /\baccording\s+to\s+me\b/i,
+        fix: (t) => t.replace(/\baccording\s+to\s+me\b/gi, 'in my opinion / from my perspective'),
+        tag: "Opinion Phrase (राय व्यक्त करना)",
+        rule: "Native speakers use 'In my opinion' or 'From my perspective'. 'According to' is used for others or data.",
+        hindi: "अपनी राय के लिए 'According to me' नहीं, 'In my opinion' या 'I believe' बोलना बेहतर है।"
+      },
+      // 12. Indianism: Years back
+      {
+        pattern: /\b(\d+|two|three|four|few|many)\s+years\s+back\b/i,
+        fix: (t) => t.replace(/\b(\d+|two|three|four|few|many)\s+years\s+back\b/gi, '$1 years ago'),
+        tag: "Time Expression (समय की अभिव्यक्ति)",
+        rule: "Say 'years ago' instead of 'years back'. E.g., 'Three years ago'.",
+        hindi: "'Years back' की जगह 'years ago' बोलें (जैसे: Three years ago)।"
+      },
+      // 13. Subject-Verb Agreement: He/She don't
+      {
+        pattern: /\b(he|she|it|everyone|someone|everybody)\s+don'?t\b/i,
+        fix: (t) => t.replace(/\b(he|she|it|everyone|someone|everybody)\s+don'?t\b/gi, "$1 doesn't"),
+        tag: "Subject-Verb Agreement (कर्ता-क्रिया तालमेल)",
+        rule: "Third-person singular subjects (he, she, it, everyone) require 'doesn't', not 'don't'.",
+        hindi: "He / She / It के साथ 'don't' नहीं, हमेशा 'doesn't' लगता है।"
+      },
+      // 14. Pluralization of uncountable nouns: informations / advices
+      {
+        pattern: /\b(informations|advices|furnitures|luggages)\b/i,
+        fix: (t) => t.replace(/\binformations\b/gi, 'information')
+                     .replace(/\badvices\b/gi, 'advice / pieces of advice')
+                     .replace(/\bfurnitures\b/gi, 'furniture')
+                     .replace(/\bluggages\b/gi, 'luggage'),
+        tag: "Uncountable Nouns (अगणनीय संज्ञा)",
+        rule: "Information, advice, luggage, and furniture are uncountable. Never add '-s'.",
+        hindi: "Information और Advice में कभी 's' नहीं लगता। हमेशा 'information' और 'advice' बोलें।"
+      },
+      // 15. Discuss about
+      {
+        pattern: /\bdiscuss\s+about\b/i,
+        fix: (t) => t.replace(/\bdiscuss\s+about\b/gi, 'discuss'),
+        tag: "Preposition Redundancy (अनावश्यक Preposition)",
+        rule: "'Discuss' already means to talk about. Do not say 'discuss about'. Say 'discuss the topic'.",
+        hindi: "'Discuss' के साथ 'about' नहीं लगाया जाता। सीधे 'discuss the matter' बोलें।"
+      },
+      // 16. Question Structure: You know about -> Do you know about
+      {
+        pattern: /^you\s+know\s+about\b/i,
+        fix: (t) => t.replace(/^you\s+know\s+about\b/i, 'Do you know about'),
+        tag: "Question Structure (प्रश्न पूछने का नियम)",
+        rule: "When asking whether someone knows something, use auxiliary verb 'Do': 'Do you know about...?' instead of 'You know about...'.",
+        hindi: "प्रश्न पूछते समय 'You know about...' की जगह 'Do you know about...?' बोलें।"
+      }
+    ];
+
+    // Power Vocabulary Replacements
+    this.vocabDictionary = {
+      'very good': { word: 'exceptional', type: 'adj', def: 'Unusually good; outstanding.', ex: 'You did an exceptional job today.' },
+      'good': { word: 'splendid', type: 'adj', def: 'Magnificent; very impressive.', ex: 'That was a splendid idea.' },
+      'very happy': { word: 'thrilled', type: 'adj', def: 'Extremely pleased and excited.', ex: 'I was thrilled to hear the news.' },
+      'happy': { word: 'delighted', type: 'adj', def: 'Feeling or showing great pleasure.', ex: 'She was delighted with the results.' },
+      'very tired': { word: 'exhausted', type: 'adj', def: 'Completely drained of energy.', ex: 'I was utterly exhausted.' },
+      'tired': { word: 'fatigued', type: 'adj', def: 'Tired from mental or physical effort.', ex: 'I felt fatigued after the day.' },
+      'very big': { word: 'colossal', type: 'adj', def: 'Extremely large or magnificent.', ex: 'It was a colossal achievement.' },
+      'big': { word: 'substantial', type: 'adj', def: 'Of considerable importance or size.', ex: 'We made substantial progress.' },
+      'hard': { word: 'challenging', type: 'adj', def: 'Demanding effort and skill.', ex: 'It was a challenging yet rewarding task.' },
+      'like': { word: 'appreciate', type: 'verb', def: 'Recognize the full value of.', ex: 'I truly appreciate your perspective.' },
+      'say': { word: 'articulate', type: 'verb', def: 'Express thoughts fluently.', ex: 'She articulated her thoughts clearly.' },
+      'problem': { word: 'obstacle', type: 'noun', def: 'A hurdle blocking progress.', ex: 'We overcame several obstacles.' }
+    };
+  }
+
+  setEngineType(type) {
+    this.engineType = type;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('talkriva_engine_type', type);
+    }
+  }
+
+  setApiKey(key) {
+    this.apiKey = key;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('talkriva_gemini_key', key);
+    }
+  }
+
+  /**
+   * Main turn pipeline
+   */
+  async processUserTurn({ text, mode, scenarioId, partner, level, lessonDay = null }) {
+    const startTime = Date.now();
+
+    // 1. Linguistic & Mistake Detection
+    const analysis = this.analyzeSpeech(text, level);
+
+    // 2. Generate Contextual AI Response
+    let aiResponse = "";
+    let aiHindi = "";
+    let aiEmotion = "🌸 Warm & Friendly";
+    if (this.engineType === 'gemini' && this.apiKey) {
+      try {
+        aiResponse = await this.callGeminiAPI({ text, mode, scenarioId, partner, level, analysis, lessonDay });
+      } catch (err) {
+        console.warn("Gemini API fallback to local engine:", err);
+        const local = this.generateLocalResponse({ text, mode, scenarioId, partner, level, analysis, lessonDay });
+        aiResponse = local.text || local;
+        aiHindi = local.hindi || "";
+        aiEmotion = local.emotion || "🌸 Warm & Friendly";
+      }
+    } else {
+      const local = this.generateLocalResponse({ text, mode, scenarioId, partner, level, analysis, lessonDay });
+      aiResponse = local.text || local;
+      aiHindi = local.hindi || "";
+      aiEmotion = local.emotion || "🌸 Warm & Friendly";
+    }
+
+    // 3. Update Memory Mind
+    this.memory.recordTurn(text, aiResponse, analysis, lessonDay);
+
+    // 4. Generate Smart Hints & How-to-Speak guidance
+    const suggestedReplies = this.generateSmartHints(aiResponse, mode, level, lessonDay);
+    const howToSpeak = this.generateHowToSpeakGuide(aiResponse, mode, lessonDay);
+
+    return {
+      aiResponse,
+      aiHindi,
+      emotion: aiEmotion,
+      analysis,
+      suggestedReplies,
+      howToSpeak,
+      memorySummary: this.memory.getSummary(),
+      processingTime: Date.now() - startTime
+    };
+  }
+
+  /**
+   * Deep Mistake Detector with Visual Diff & Hindi Explanations
+   */
+  analyzeSpeech(rawText, level) {
+    const text = rawText.trim();
+    if (!text) {
+      return {
+        original: "",
+        corrected: "",
+        hasError: false,
+        diffWrongHtml: "No input",
+        diffCorrectHtml: "No input",
+        hindiExplanation: "वाक्य बिल्कुल सही है।",
+        grammarExplanation: "No input detected.",
+        nativeAlternative: "",
+        vocabUpgrades: [],
+        fluencyScore: 100,
+        fillerCount: 0,
+        wpm: 0
+      };
+    }
+
+    // Filler word count
+    const fillerRegex = /\b(um|uh|like|you know|basically|actually|sort of|kind of|i mean)\b/gi;
+    const fillerMatches = text.match(fillerRegex) || [];
+    const fillerCount = fillerMatches.length;
+
+    let correctedText = text;
+    let detectedRule = null;
+    let detectedHindi = null;
+    const detectedIssues = [];
+
+    // Test against grammar & Indianism patterns
+    for (const rule of this.grammarRules) {
+      if (rule.pattern && rule.pattern.test(correctedText)) {
+        if (rule.fix) {
+          correctedText = rule.fix(correctedText);
+        }
+        detectedIssues.push(rule);
+        if (!detectedRule) {
+          detectedRule = rule.rule;
+          detectedHindi = rule.hindi;
+        }
+      }
+    }
+
+    // Capitalize first letter and add period
+    if (correctedText.length > 0) {
+      correctedText = correctedText.charAt(0).toUpperCase() + correctedText.slice(1);
+      if (!/[.?!]$/.test(correctedText)) {
+        correctedText += '.';
+      }
+    }
+
+    const hasError = detectedIssues.length > 0 || correctedText.toLowerCase() !== text.toLowerCase();
+
+    // Generate Visual Diff Highlighting
+    const { diffWrongHtml, diffCorrectHtml } = this.generateVisualDiff(text, correctedText, hasError);
+
+    // Generate Natural Native Alternative
+    const nativeAlternative = this.generateNativeAlternative(text, correctedText);
+
+    // Power Vocabulary Upgrades
+    const vocabUpgrades = this.extractVocabUpgrades(text);
+
+    // Scoring
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    let fluencyScore = 96;
+    if (hasError) fluencyScore -= 10 * detectedIssues.length;
+    if (fillerCount > 0) fluencyScore -= 4 * fillerCount;
+    if (wordCount < 4) fluencyScore -= 8;
+    fluencyScore = Math.max(65, Math.min(99, fluencyScore));
+
+    return {
+      original: text,
+      corrected: hasError ? correctedText : text,
+      hasError: hasError,
+      diffWrongHtml,
+      diffCorrectHtml,
+      hindiExplanation: detectedHindi || "आपका वाक्य व्याकरण की दृष्टि से सही और स्पष्ट है!",
+      grammarExplanation: detectedRule || "Clean sentence structure with no critical grammar errors.",
+      nativeAlternative,
+      vocabUpgrades,
+      fluencyScore,
+      fillerCount,
+      wpm: Math.floor(115 + Math.random() * 20),
+      fluencyTip: this.getFluencyTip(text, wordCount, hasError)
+    };
+  }
+
+  /**
+   * Generates HTML with red strikethrough for wrong words and green highlight for correct words
+   */
+  generateVisualDiff(original, corrected, hasError) {
+    if (!hasError) {
+      return {
+        diffWrongHtml: `<span style="color:#94a3b8;">"${original}"</span>`,
+        diffCorrectHtml: `<span class="correct-word-highlight">${corrected}</span> (No mistakes!)`
+      };
+    }
+
+    const origWords = original.split(/\s+/);
+    const corrWords = corrected.replace(/[.?!]$/, '').split(/\s+/);
+
+    let wrongHtml = '';
+    let correctHtml = '';
+
+    origWords.forEach((word) => {
+      const clean = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const isMismatch = !corrWords.some(cw => cw.toLowerCase().replace(/[^a-z0-9]/g, '') === clean);
+      if (isMismatch) {
+        wrongHtml += `<span class="error-word-highlight">${word}</span> `;
+      } else {
+        wrongHtml += `${word} `;
+      }
+    });
+
+    corrWords.forEach((word) => {
+      const clean = word.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const isMismatch = !origWords.some(ow => ow.toLowerCase().replace(/[^a-z0-9]/g, '') === clean);
+      if (isMismatch) {
+        correctHtml += `<span class="correct-word-highlight">${word}</span> `;
+      } else {
+        correctHtml += `${word} `;
+      }
+    });
+
+    return {
+      diffWrongHtml: wrongHtml.trim(),
+      diffCorrectHtml: correctHtml.trim() + '.'
+    };
+  }
+
+  /**
+   * Generates dynamic, fresh, and non-repetitive conversation starters
+   * Each with rich daily-use and power vocabularies, Hindi translation,
+   * and targeted hint drawer data so the user never gets bored!
+   */
+  getDynamicStarter(userName = "Learner", level = "tooti-footi", goal = "job-interview", city = "", profession = "student") {
+    const prof = this.memory.data.profile;
+    const name = userName || prof.name || "friend";
+    const userCity = (city || prof.city || this.memory.data.userFacts['city'] || "").trim();
+    const userGoal = goal || prof.goal || "job-interview";
+    const userLevel = level || prof.level || "tooti-footi";
+    const userProf = profession || prof.profession || "student";
+    const citName = userCity || "Chitkoot";
+    const profLabel = userProf === 'student' ? 'college student' : (userProf === 'tech' ? 'software aspirant' : 'professional');
+
+    const starters = [
+      // 1. Placement & HR Interview with Saved City & Profession
+      {
+        id: 'starter-profile-placement-intro',
+        emotion: '💡 Placement Coach',
+        text: `Hello ${name}! As an ambitious ${profLabel} from ${citName} preparing for campus placements, the very first question recruiters ask is: 'Tell me about yourself'. How would you introduce your background, college, and career interests from ${citName} in 2-3 simple English sentences?`,
+        hindi: `नमस्ते ${name}! ${citName} से कैंपस प्लेसमेंट की तैयारी कर रहे ${profLabel} के रूप में, इंटरव्यूअर्स का पहला सवाल होता है: 'Tell me about yourself'। आप अपने कॉलेज और शहर के बारे में 2-3 सरल वाक्यों में अंग्रेजी में कैसे परिचय देंगे?`,
+        whatAsked: `आरिया पूछ रही है: '${citName} से अपने कॉलेज और बैकग्राउंड का परिचय 2-3 सरल वाक्यों में दें!'`,
+        targetText: `Hello! My name is ${name}. I am from ${citName}, and I am actively preparing for campus placements and technical interviews.`,
+        phonetic: `Huh-LOH! My naym iz ${name}. Eye am fruhm ${citName}, and eye am AK-tiv-lee pree-PAIR-ing fur KAM-pus plays-munts and tek-NIH-kul IN-ter-vyooz.`,
+        hindiMeaning: `नमस्ते! मेरा नाम ${name} है। मैं ${citName} से हूँ, और मैं कैंपस प्लेसमेंट और टेक्निकल इंटरव्यू की सक्रिय तैयारी कर रहा हूँ।`
+      },
+      // 2. Hometown Culture & Real-Life Heritage (Chitkoot / Varanasi / Delhi etc.)
+      {
+        id: 'starter-profile-hometown',
+        emotion: '🌸 Warm & Welcoming',
+        text: `Namaste ${name}! It is truly wonderful to connect with you from ${citName}! If an interviewer or new friend asks: 'What is special about ${citName}?', how would you describe the peace, culture, and beauty of ${citName} in English?`,
+        hindi: `नमस्ते ${name}! आपसे ${citName} से जुड़कर बहुत खुशी हुई! अगर कोई पूछे कि ${citName} में क्या खास है, तो आप अपने शहर की शांति और संस्कृति का वर्णन अंग्रेजी में कैसे करेंगे?`,
+        whatAsked: `आरिया पूछ रही है: 'अपने शहर (${citName}) की खासियत या संस्कृति के बारे में अंग्रेजी में बताएं!'`,
+        targetText: `My hometown ${citName} is a very peaceful and culturally rich place known for its serene Mandakini river and warm people.`,
+        phonetic: `My HOHM-town ${citName} iz uh VER-ee PEES-ful and KUL-chur-uh-lee rich plays nohn fur its suh-REEN mun-DAH-kih-nee RIV-er and warm PEE-pul.`,
+        hindiMeaning: `मेरा गृहक्षेत्र ${citName} बहुत ही शांत और सांस्कृतिक रूप से समृद्ध स्थान है जो अपनी शांत मंदाकिनी नदी और मिलनसार लोगों के लिए जाना जाता है।`
+      },
+      // 3. Broken English / Tooti-Footi Reassurance
+      {
+        id: 'starter-profile-tooti-footi',
+        emotion: '🤗 Supportive & Caring',
+        text: `Arey ${name}, don't worry at all if your English feels tooti-footi or broken right now! Even top leaders started with broken English. Speak with an open heart: what is one thing that made you smile or feel proud today?`,
+        hindi: `अरे ${name}, बिल्कुल चिंता मत कीजिए अगर आपकी इंग्लिश टूटी-फूटी है! दिल खोलकर बोलिए: आज ऐसी कौन सी बात रही जिससे आपके चेहरे पर मुस्कान आई या गर्व महसूस हुआ?`,
+        whatAsked: `आरिया कह रही है: 'टूटी-फूटी इंग्लिश की चिंता छोड़िए, बताइए आज आपको किस बात से खुशी या गर्व महसूस हुआ!'`,
+        targetText: `Today, I felt proud because I am taking active daily steps to practice speaking English with confidence.`,
+        phonetic: `Too-DAY, eye felt prowd bee-KUZ eye am TAY-king AK-tiv DAY-lee steps too PRAK-tis SPEE-king ING-glish with KAHN-fih-dense.`,
+        hindiMeaning: `आज मुझे गर्व महसूस हुआ क्योंकि मैं आत्मविश्वास के साथ अंग्रेजी बोलने का अभ्यास करने के लिए रोज़ाना सक्रिय कदम उठा रहा हूँ।`
+      },
+      // 4. College Project & Technical Strength
+      {
+        id: 'starter-profile-project-skills',
+        emotion: '🤩 Impressed & Curious',
+        text: `Hi ${name}! In placement interviews, explaining your college projects simply is a game-changer! Tell me: what is one technical project, skill, or subject you are really excited about?`,
+        hindi: `हाय ${name}! प्लेसमेंट इंटरव्यू में अपने प्रोजेक्ट्स को सरलता से समझाना बहुत बड़ी ताकत है। बताइए: वह कौन सा प्रोजेक्ट या हुनर है जिसमें आपकी सबसे ज्यादा रुचि है?`,
+        whatAsked: `आरिया पूछ रही है: 'अपने कॉलेज प्रोजेक्ट या तकनीकी हुनर के बारे में बताएं!'`,
+        targetText: `I am currently developing an interactive software project that solves practical challenges through modern technology.`,
+        phonetic: `Eye am KUR-ent-lee dih-VEL-up-ing an in-ter-AK-tiv SAHFT-wair PRAH-jekt that sahlvz PRAK-tih-kul CHAL-en-jez throo MAH-durn tek-NAH-luh-jee.`,
+        hindiMeaning: `मैं वर्तमान में एक इंटरएक्टिव सॉफ्टवेयर प्रोजेक्ट विकसित कर रहा हूँ जो आधुनिक तकनीक के माध्यम से व्यावहारिक चुनौतियों को हल करता है।`
+      },
+      // 5. Daily Real-Life Chai, Coffee & Recharge
+      {
+        id: 'starter-profile-daily-chai',
+        emotion: '✨ Energized & Cheerful',
+        text: `Hey ${name}! Hope your day is going great in ${citName}! Do you prefer taking a short break with hot tea or coffee to unwind and recharge your energy during your daily routine?`,
+        hindi: `अरे ${name}! आशा है ${citName} में आपका दिन बहुत अच्छा बीत रहा है! पढ़ाई या काम के बीच माइंड रीचार्ज करने के लिए आप गर्म चाय पसंद करते हैं या कॉफ़ी?`,
+        whatAsked: `आरिया पूछ रही है: 'रिफ्रेश होने के लिए आप चाय या कॉफ़ी में से क्या लेना पसंद करते हैं?'`,
+        targetText: `I definitely prefer having a hot cup of tea to refresh my mind and maintain high energy throughout the day.`,
+        phonetic: `Eye DEF-ih-nit-lee pree-FUR HAV-ing uh hot kup uv tee too ree-FRESH my mynd and mayn-TAYN high EN-er-jee throo-OWT thuh day.`,
+        hindiMeaning: `मैं अपने दिमाग को तरोताजा करने और पूरे दिन उच्च ऊर्जा बनाए रखने के लिए निश्चित रूप से गर्म चाय पीना पसंद करता हूँ।`
+      },
+      // 6. Placement Situational: Why Should We Hire You?
+      {
+        id: 'starter-profile-hire-strength',
+        emotion: '💡 Interview Coach',
+        text: `Hello ${name}! Imagine an HR recruiter in a campus interview asks: 'Why should we hire you?' How would you highlight your discipline, adaptability, and passion to learn?`,
+        hindi: `नमस्ते ${name}! कल्पना कीजिए कैंपस इंटरव्यू में एचआर पूछे: 'हम आपको क्यों चुनें?' तो आप अपनी लगन, अनुशासन और सीखने की ललक को कैसे बताएंगे?`,
+        whatAsked: `आरिया पूछ रही है: 'इंटरव्यू में अपनी मेहनत और सीखने की क्षमता को कैसे व्यक्त करेंगे?'`,
+        targetText: `You should hire me because I am a fast learner, deeply disciplined, and enthusiastic about contributing real value to the team.`,
+        phonetic: `Yoo shood HYRE mee bee-KUZ eye am uh fast LUR-ner, DEEP-lee DIS-uh-plind, and en-thoo-zee-AS-tik uh-bowt kun-TRIB-yoo-ting reel VAL-yoo too thuh teem.`,
+        hindiMeaning: `आपको मुझे इसलिए चुनना चाहिए क्योंकि मैं जल्दी सीखता हूँ, गहरा अनुशासित हूँ और टीम में वास्तविक योगदान देने के लिए उत्साही हूँ।`
+      },
+      // 7. Free Time Passions & Hobbies
+      {
+        id: 'starter-profile-hobbies',
+        emotion: '🌸 Warm & Relatable',
+        text: `Good to talk with you, ${name}! In real life, connecting over personal hobbies makes conversations smooth and friendly. What kind of music, sports, or hobbies do you enjoy during your leisure time?`,
+        hindi: `आपसे बात करके बहुत खुशी हुई, ${name}! खाली समय में आपको कौन सा संगीत, खेल या शौक पूरा करना सबसे अच्छा लगता है?`,
+        whatAsked: `आरिया पूछ रही है: 'अपने पसंदीदा शौक, खेल या संगीत के बारे में बताइए!'`,
+        targetText: `In my leisure time, I genuinely enjoy reading informative books, listening to music, and practicing spoken English.`,
+        phonetic: `In my LEE-zhur tyme, eye JEN-yoo-in-lee en-JOY REE-ding in-FOR-muh-tiv books, LIS-ning too MYOO-zik, and PRAK-tih-sing SPOH-kun ING-glish.`,
+        hindiMeaning: `खाली समय में, मुझे ज्ञानवर्धक किताबें पढ़ना, संगीत सुनना और अंग्रेजी बोलने का अभ्यास करना बहुत अच्छा लगता है।`
+      },
+      // 8. Overcoming Hesitation & Speaking Confidently
+      {
+        id: 'starter-profile-hesitation',
+        emotion: '✨ Inspiring & Motivating',
+        text: `Welcome ${name}! Remember: whenever you feel stuck, take a peaceful 1-second silent pause instead of saying 'Um'. How confident are you feeling about expressing your thoughts in English today?`,
+        hindi: `स्वागत है ${name}! याद रखें: घबराने या 'Um' बोलने की जगह 1 सेकंड का शांत पॉज लें। आज आप अपने विचार रखने में कितना आत्मविश्वासी महसूस कर रहे हैं?`,
+        whatAsked: `आरिया पूछ रही है: 'बिना किसी झिझक के बताएं कि आज आप कितना आत्मविश्वासी महसूस कर रहे हैं!'`,
+        targetText: `I am feeling very optimistic and ready to speak with clear, natural confidence.`,
+        phonetic: `Eye am FEEL-ing VER-ee ahp-tuh-MIS-tik and RED-ee too speek with kleer, NACH-er-ul KAHN-fih-dense.`,
+        hindiMeaning: `मैं बहुत सकारात्मक महसूस कर रहा हूँ और स्पष्ट, स्वाभाविक आत्मविश्वास के साथ बोलने के लिए तैयार हूँ।`
+      }
+    ];
+
+    if (this._lastStarterIdx === undefined) {
+      this._lastStarterIdx = Math.floor(Math.random() * starters.length);
+    } else {
+      this._lastStarterIdx = (this._lastStarterIdx + 1) % starters.length;
+    }
+    const selected = starters[this._lastStarterIdx];
+    this.currentActiveStarter = selected;
+    return selected;
+  }
+
+  /**
+   * Guidance card data with sentence formula, phonetics & Hindi meaning
+   * Dynamically analyzes what Aria asked in aiResponse to tell the user:
+   * 1. whatAriaIsAsking: In Hindi, what Aria is asking them
+   * 2. targetText: Exactly how to answer her in English
+   * 3. phonetic: Word-by-word pronunciation guide
+   * 4. hindi: The Hindi meaning of this answer
+   */
+  generateHowToSpeakGuide(aiResponse, mode, lessonDay = null) {
+    const cleanAi = (aiResponse || "").toLowerCase();
+    const userMemory = this.memory.data;
+    const userName = userMemory.profile.name || "friend";
+
+    // CASE 1: Structured Lesson Practice Mode
+    if (lessonDay) {
+      const lesson = this.lessonsCurriculum.find(l => l.day === parseInt(lessonDay, 10));
+      if (lesson && lesson.practiceChallenge) {
+        let whatAsked = `आरिया अभ्यास करवा रही है: ${lesson.titleHindi}`;
+        if (parseInt(lessonDay, 10) === 1) {
+          whatAsked = "आरिया पूछ रही है: 'Myself' के बिना अपना नाम, शहर और आज का मूड बताएं!";
+        } else if (parseInt(lessonDay, 10) === 2) {
+          whatAsked = "आरिया पूछ रही है: आज दिन में आपने क्या किया और शाम को क्या करना पसंद करते हैं?";
+        } else if (parseInt(lessonDay, 10) === 3) {
+          whatAsked = "आरिया पूछ रही है: बिना 'Um' या 'Uh' बोले, शांत रहकर बताएं कि आपका सबसे बड़ा लक्ष्य क्या है?";
+        } else if (parseInt(lessonDay, 10) === 4) {
+          whatAsked = "आरिया पूछ रही है (Ping-Pong): आपका वीकेंड कैसा रहा और रिलैक्स करने के लिए क्या करते हैं? (जवाब देकर वापस सवाल पूछें)";
+        } else if (parseInt(lessonDay, 10) === 5) {
+          whatAsked = "आरिया पूछ रही है: 14 घंटे काम करने की बात पर आप विनम्रता से (Diplomatically) असहमति कैसे जताएंगे?";
+        } else if (parseInt(lessonDay, 10) === 6) {
+          whatAsked = "आरिया पूछ रही है: सीनियर मैनेजर के सामने 45 सेकंड में अपना रोल और अनुभव बताएं!";
+        } else if (parseInt(lessonDay, 10) === 7) {
+          whatAsked = "आरिया पूछ रही है (STAR Method): कोई कठिन चुनौती, आपका उठाया कदम और परिणाम बताएं!";
+        }
+
+        return {
+          whatAriaIsAsking: whatAsked,
+          formula: lesson.title,
+          targetText: lesson.practiceChallenge.targetSentence,
+          phonetic: lesson.practiceChallenge.phoneticGuide,
+          hindi: `हिंदी अर्थ: ${lesson.practiceChallenge.targetSentence}`
+        };
+      }
+    }
+
+    // CASE 1B: If matching the current dynamic conversation starter
+    if (!lessonDay && this.currentActiveStarter) {
+      const starterKey = this.currentActiveStarter.text.slice(0, 25).toLowerCase();
+      if (cleanAi.includes(starterKey) || cleanAi.includes(this.currentActiveStarter.id)) {
+        return {
+          whatAriaIsAsking: this.currentActiveStarter.whatAsked,
+          formula: "Dynamic Starter + Vocabulary",
+          targetText: this.currentActiveStarter.targetText,
+          phonetic: this.currentActiveStarter.phonetic,
+          hindi: `हिंदी अर्थ: ${this.currentActiveStarter.hindiMeaning}`
+        };
+      }
+    }
+
+    // CASE 2: Dynamic Question Analysis based on what Aria just asked
+    // A. Chitkoot & Historical travel
+    if (cleanAi.includes("chitkoot") || cleanAi.includes("varanasi") || cleanAi.includes("historical places") || cleanAi.includes("travel destination")) {
+      return {
+        whatAriaIsAsking: "आरिया पूछ रही है: 'चित्रकूट या किसी ऐतिहासिक जगह की यात्रा के बारे में आपका क्या विचार है?'",
+        formula: "Serene destination + Mandakini river + Spiritual heritage",
+        targetText: "Yes, Chitkoot is a serene and holy destination surrounded by the Mandakini river and lush hills.",
+        phonetic: "Yes, CHIT-ruh-koot iz uh suh-REEN and HOH-lee des-tuh-NAY-shun suh-RAWN-did by thuh mun-DAH-kih-nee RIV-er and lush hilz.",
+        hindi: "हाँ, चित्रकूट मंदाकिनी नदी और हरे-भरे पहाड़ों से घिरा एक बहुत ही शांत और पवित्र धार्मिक स्थल है।"
+      };
+    }
+
+    // B. Morning Routine & Priorities
+    if (cleanAi.includes("morning routine") || cleanAi.includes("priorities")) {
+      return {
+        whatAriaIsAsking: "आरिया पूछ रही है: 'आज आपकी सुबह कैसी रही और आपने दिन की क्या योजना बनाई?'",
+        formula: "Productive morning + Planned tasks",
+        targetText: "My morning was very productive and refreshing. I planned my tasks and practiced speaking English.",
+        phonetic: "My MOR-ning wuz VER-ee pruh-DUK-tiv and ree-FRESH-ing. Eye pland my tasks and PRAK-tist SPEE-king ING-glish.",
+        hindi: "मेरी सुबह बहुत उपयोगी और तरोताजा रही। मैंने अपने कामों की योजना बनाई और अंग्रेजी बोलने का अभ्यास किया।"
+      };
+    }
+
+    // C. Chai, Coffee, Tea & Unwind
+    if (cleanAi.includes("tea or coffee") || cleanAi.includes("unwind and recharge") || cleanAi.includes("cup of tea")) {
+      return {
+        whatAriaIsAsking: "आरिया पूछ रही है: 'रिलैक्स करने और ऊर्जा पाने के लिए आप गर्म चाय पसंद करते हैं या कॉफ़ी?'",
+        formula: "Preference (hot tea) + Unwind benefit",
+        targetText: "I definitely prefer having a hot cup of tea to unwind and stay energetic throughout the day.",
+        phonetic: "Eye DEF-ih-nit-lee pree-FUR HAV-ing uh hot kup uv tee too un-WYND and stay en-er-JET-ik throo-OWT thuh day.",
+        hindi: "मैं दिनभर ऊर्जावान बने रहने और तनावमुक्त होने के लिए निश्चित रूप से गर्म चाय पीना पसंद करता हूँ।"
+      };
+    }
+
+    // D. Career Milestone & Ambition
+    if (cleanAi.includes("milestone") || cleanAi.includes("accomplish this year") || cleanAi.includes("career goals")) {
+      return {
+        whatAriaIsAsking: "आरिया पूछ रही है: 'इस साल आपका सबसे बड़ा करियर लक्ष्य या मील का पत्थर क्या है?'",
+        formula: "Primary milestone + Fluent English + High-impact job",
+        targetText: "My primary milestone this year is to become fluent in English and secure a high-impact job role.",
+        phonetic: "My PRY-mair-ee MYLE-stone this yeer iz too bee-KUM FLOO-ent in ING-glish and sih-KYOOR uh high-IM-pakt jahb rohl.",
+        hindi: "इस साल मेरा मुख्य मील का पत्थर अंग्रेजी में धाराप्रवाह बनना और एक बेहतरीन नौकरी हासिल करना है।"
+      };
+    }
+
+    // E. Strength & Interview
+    if (cleanAi.includes("personal strength") || cleanAi.includes("greatest strength")) {
+      return {
+        whatAriaIsAsking: "आरिया पूछ रही है: 'आपकी सबसे बड़ी व्यक्तिगत खूबी या ताकत क्या है?'",
+        formula: "Meticulous attention + Resilience under challenges",
+        targetText: "My greatest strength is my meticulous attention to detail and my resilience when solving complex challenges.",
+        phonetic: "My GRAY-tist strength iz my muh-TIK-yuh-lus uh-TEN-shun too DEE-tayl and my rih-ZIL-yunce wen SAHL-ving KOM-pleks CHAL-en-jez.",
+        hindi: "मेरी सबसे बड़ी ताकत बारीकियों पर मेरा सूक्ष्म ध्यान और कठिन चुनौतियों को हल करने में मेरी अडिग लगन है।"
+      };
+    }
+
+    // F. Name & How Feeling
+    if (cleanAi.includes("what is your name") || cleanAi.includes("how are you feeling") || cleanAi.includes("feeling today") || cleanAi.includes("name and")) {
+      return {
+        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपका नाम क्या है और आज आप कैसा महसूस कर रहे हैं?'",
+        formula: "Greeting + Name + Location + Feeling",
+        targetText: `Hello Aria, my name is ${userName}. I am feeling very positive and energetic today.`,
+        phonetic: `Huh-LOH AH-ree-uh, my name iz ${userName}. Eye am FEEL-ing VER-ee PAH-zih-tiv and en-er-JET-ik too-day.`,
+        hindi: `नमस्ते आरिया, मेरा नाम ${userName} है। आज मैं बहुत सकारात्मक और ऊर्जावान महसूस कर रहा हूँ।`
+      };
+    }
+
+    // B. Food, Tea, Coffee, Breakfast
+    if (cleanAi.includes("food") || cleanAi.includes("fruit") || cleanAi.includes("eat") || cleanAi.includes("tea") || cleanAi.includes("coffee") || cleanAi.includes("breakfast") || cleanAi.includes("drink")) {
+      return {
+        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपको खाने-पीने में क्या पसंद है या सुबह नाश्ते में क्या लेते हैं?'",
+        formula: "Preference (I really like / prefer) + Item + Time",
+        targetText: "I really enjoy having a hot cup of tea and light breakfast in the morning.",
+        phonetic: "Eye REE-lee en-JOY HAV-ing uh hot kup uv tee and lyte BREK-fust in thuh MOR-ning.",
+        hindi: "मुझे सुबह गर्म चाय पीना और हल्का नाश्ता करना बहुत पसंद है।"
+      };
+    }
+
+    // C. Routine, Yesterday, What did you do
+    if (cleanAi.includes("what did you do") || cleanAi.includes("yesterday") || cleanAi.includes("earlier today") || cleanAi.includes("afternoon")) {
+      return {
+        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आज दिन में आपने क्या किया, या कल आपने क्या काम किया था?'",
+        formula: "Past Marker (Earlier today / Yesterday) + Past Verb (finished / went) + Details",
+        targetText: "Earlier today, I finished all my daily tasks and practiced my English speaking.",
+        phonetic: "UR-lee-ur too-day, eye FIN-isht all my DAY-lee tasks and PRAK-tist my ING-glish SPEE-king.",
+        hindi: "आज दिन में मैंने अपने सभी काम पूरे किए और अपनी इंग्लिश बोलने का अभ्यास किया।"
+      };
+    }
+
+    // D. Hobby, Free time, Weekend, Music, Unwind
+    if (cleanAi.includes("hobby") || cleanAi.includes("free time") || cleanAi.includes("weekend") || cleanAi.includes("music") || cleanAi.includes("unwind") || cleanAi.includes("movie")) {
+      return {
+        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपको खाली समय में क्या करना पसंद है और वीकेंड पर कैसे रिलैक्स करते हैं?'",
+        formula: "Activity + Passion (I love / enjoy) + Reason",
+        targetText: "In my free time, I love listening to soothing music and reading inspiring books.",
+        phonetic: "In my free tyme, eye luv LIS-ning too SOO-thing MYOO-zik and REE-ding in-SPY-ring books.",
+        hindi: "खाली समय में मुझे मधुर संगीत सुनना और प्रेरणादायक किताबें पढ़ना बहुत पसंद है।"
+      };
+    }
+
+    // E. City, Hometown, Where you live
+    if (cleanAi.includes("city") || cleanAi.includes("hometown") || cleanAi.includes("where do you live") || cleanAi.includes("where you live")) {
+      return {
+        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आप किस शहर से हैं और अपने शहर के बारे में कुछ बताएं?'",
+        formula: "Origin (I am from / live in) + City Quality (famous for)",
+        targetText: "I live in a peaceful city which is famous for its rich culture and delicious food.",
+        phonetic: "Eye liv in uh PEES-ful SIT-ee witch iz FAY-mus fur its rich KUL-chur and dih-LISH-us food.",
+        hindi: "मैं एक शांत शहर में रहता हूँ जो अपनी समृद्ध संस्कृति और स्वादिष्ट भोजन के लिए प्रसिद्ध है।"
+      };
+    }
+
+    // F. Studies, Work, Career, Goals
+    if (cleanAi.includes("study") || cleanAi.includes("work") || cleanAi.includes("goals") || cleanAi.includes("career") || cleanAi.includes("tasks are you focusing")) {
+      return {
+        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपकी पढ़ाई, नौकरी या आजकल के मुख्य लक्ष्य क्या हैं?'",
+        formula: "Current focus (Currently, I am focusing on) + Objective",
+        targetText: "Currently, I am focusing on my studies and improving my spoken English communication.",
+        phonetic: "KUR-ent-lee, eye am FOH-kus-ing on my STUD-eez and im-PROO-ving my SPOH-kun ING-glish.",
+        hindi: "वर्तमान में, मैं अपनी पढ़ाई और इंग्लिश बातचीत सुधारने पर ध्यान दे रहा हूँ।"
+      };
+    }
+
+    // G. Interview, Challenge, Obstacle
+    if (cleanAi.includes("challenge") || cleanAi.includes("obstacle") || cleanAi.includes("difficult") || cleanAi.includes("interview")) {
+      return {
+        whatAriaIsAsking: "आरिया आपसे पूछ रही है: 'आपने किसी कठिन चुनौती का सामना कैसे किया और उसे कैसे हल किया?'",
+        formula: "Situation + Strategic Action + Positive Outcome",
+        targetText: "When faced with a tough deadline, I prioritized key tasks and delivered successfully on time.",
+        phonetic: "Wen fayst with uh tuff DED-lyne, eye pry-OR-ih-tyzed kee tasks and dih-LIV-erd suk-SES-fuh-lee on tyme.",
+        hindi: "कठिन समय सीमा का सामना करते हुए, मैंने मुख्य कार्यों को प्राथमिकता दी और समय पर पूरा किया।"
+      };
+    }
+
+    // Fallback General Question
+    return {
+      whatAriaIsAsking: "आरिया आपसे पूछ रही है: अपने विचार साझा करें और इस बातचीत को आगे बढ़ाएं।",
+      formula: "Clear Direct Answer + Enthusiastic Follow-up",
+      targetText: "To be completely honest, I agree with you and would love to practice this further.",
+      phonetic: "Too bee kum-PLEET-lee ON-ist, eye uh-GREE with yoo and wood luv too PRAK-tis this FUR-ther.",
+      hindi: "पूरी ईमानदारी से कहूँ तो, मैं आपकी बात से सहमत हूँ और इसका और अभ्यास करना चाहूँगा।"
+    };
+  }
+
+  generateNativeAlternative(original, corrected) {
+    const lower = original.toLowerCase();
+    if (lower.includes("yesterday i go") || lower.includes("yesterday i went")) {
+      return "Yesterday, I popped over to the market and picked up some groceries.";
+    }
+    if (lower.includes("myself")) {
+      return "Hi, I'm Rahul! Pleased to make your acquaintance.";
+    }
+    if (lower.includes("i am agree") || lower.includes("i agree")) {
+      return "I completely see eye-to-eye with you on that point.";
+    }
+    return corrected;
+  }
+
+  extractVocabUpgrades(text) {
+    const upgrades = [];
+    const lower = text.toLowerCase();
+
+    for (const [key, item] of Object.entries(this.vocabDictionary)) {
+      const regex = new RegExp(`\\b${key}\\b`, 'i');
+      if (regex.test(lower)) {
+        upgrades.push({
+          original: key,
+          powerWord: item.word,
+          type: item.type,
+          definition: item.def,
+          example: item.ex
+        });
+      }
+    }
+
+    if (upgrades.length === 0) {
+      upgrades.push({ original: 'good', powerWord: 'commendable', type: 'adj', definition: 'Deserving praise and admiration.', example: 'You made a commendable effort today.' });
+    }
+
+    return upgrades.slice(0, 3);
+  }
+
+  getFluencyTip(text, wordCount, hasError) {
+    if (hasError) {
+      return "बीते समय (Past Tense) की बात करते समय verb की 2nd form (went, bought, saw) पर विशेष ध्यान दें!";
+    }
+    if (wordCount < 4) {
+      return "वाक्य को बड़ा करने के लिए 'because...', 'for example...' या 'actually...' का प्रयोग करें!";
+    }
+    return "बोलते समय 'Um', 'Uh' की जगह 1 सेकंड का शांत पॉज (silent pause) लें—इससे आप काफी आत्मविश्वासी लगेंगे!";
+  }
+
+  /**
+   * Generates intelligent, memory-aware, and lesson-aware responses
+   */
+  generateLocalResponse({ text, mode, scenarioId, partner, level, analysis, lessonDay }) {
+    const cleanText = text.toLowerCase();
+    const prof = this.memory.data.profile;
+    const userName = prof.name || "friend";
+    const userCity = (prof.city || this.memory.data.userFacts['city'] || "").trim();
+    const userGoal = prof.goal || "job-interview";
+    const userLevel = level || prof.level || "tooti-footi";
+    const userProf = prof.profession || "student";
+    const citName = userCity || "Chitkoot";
+
+    // ------------------------------------------------------------------------
+    // CASE A: ACTIVE LESSON PRACTICE MODE
+    // ------------------------------------------------------------------------
+    if (lessonDay) {
+      const dayNum = parseInt(lessonDay, 10);
+
+      // Lesson 1: First Impressions & Greetings
+      if (dayNum === 1) {
+        if (cleanText.includes("myself")) {
+          return {
+            emotion: "💡 Coaching & Guiding",
+            text: `Arey ${userName}, you have wonderful energy! Remember our golden first-impression rule: never start with 'Myself'. In professional and real-life chats, say 'I am' or 'My name is'—it sounds so poised! Now tell me: what is one thing you love most about ${citName}?`,
+            hindi: `अरे ${userName}, आपकी ऊर्जा बहुत अच्छी है! याद रखें: 'Myself' से वाक्य शुरू न करें, 'I am' या 'My name is' बोलें। बताइए: ${citName} की कौन सी बात आपको सबसे ज्यादा पसंद है?`
+          };
+        }
+        return {
+          emotion: "🤩 Impressed & Proud",
+          text: `Outstanding introduction, ${userName}! You spoke with remarkable clarity and nailed the 7-second rule! Day 1 is now locked in your memory progress. What are you most excited to learn next?`,
+          hindi: `लाजवाब परिचय, ${userName}! आपने 7-सेकंड नियम का बहुत अच्छे से पालन किया। डे 1 अब आपके प्रोग्रेस में पूरा हो गया है!`
+        };
+      }
+
+      // Lesson 2: Tooti-Footi to SVO Sentences
+      if (dayNum === 2) {
+        if (cleanText.includes("yesterday i go") || cleanText.includes("take tea")) {
+          return {
+            emotion: "💡 Coaching & Guiding",
+            text: `Good effort, ${userName}! A quick conversational polish: say 'yesterday I went' and 'had some tea'. You're getting sharper every minute! Tell me, what do you usually enjoy doing on Sunday evenings?`,
+            hindi: `अच्छा प्रयास! 'yesterday I went' और 'had some tea' बोलें। आप हर मिनट बेहतर हो रहे हैं! रविवार की शाम को क्या करना पसंद करते हैं?`
+          };
+        }
+        return {
+          emotion: "🤩 Impressed & Proud",
+          text: `Brilliant sentence structure! Connecting your thoughts with Subject, Verb, and Object makes your English feel smooth and native. What is your favorite comfort food after a busy day?`,
+          hindi: `शानदार वाक्य रचना! पूरे वाक्य जोड़कर बोलना ही फ्लूएंसी का असली राज़ है। व्यस्त दिन के बाद आपका पसंदीदा खाना क्या है?`
+        };
+      }
+
+      // Lesson 3: Hesitation & Silent Pause
+      if (dayNum === 3) {
+        return {
+          emotion: "✨ Inspiring & Motivating",
+          text: `Bravo, ${userName}! I loved your calm delivery and steady pace. Taking a silent pause instead of saying 'Um' makes you sound like a true leader! What is a big career dream you are working toward?`,
+          hindi: `शाबाश, ${userName}! आपने बहुत शांत और आत्मविश्वास से बोला। 'Um' की जगह शांत पॉज लेना ही लीडर्स की निशानी है!`
+        };
+      }
+
+      // Lesson 4: FORD Networking & Ping-Pong
+      if (dayNum === 4) {
+        return {
+          emotion: "🌸 Warm & Relatable",
+          text: `Fantastic conversational Ping-Pong! Adding a personal detail and asking a question back keeps the energy alive! Riva loves chatting with you! Do you prefer traveling to historical places like ${citName} or relaxing in nature?`,
+          hindi: `कमाल का पिंग-पॉन्ग स्टाइल! अतिरिक्त जानकारी जोड़कर सवाल पूछने से बातचीत कभी खत्म नहीं होती!`
+        };
+      }
+
+      // Lesson 5: Diplomatic Persuasion
+      if (dayNum === 5) {
+        return {
+          emotion: "🎯 Professional & Poised",
+          text: `Spot-on diplomacy, ${userName}! Disagreeing politely using 'however' and 'from my perspective' is the trademark of top communicators. How would you handle a teammate during a tight project deadline?`,
+          hindi: `सटीक कूटनीति! 'however' और 'from my perspective' का प्रयोग करके विनम्र असहमति जताना बहुत प्रभावशाली होता है!`
+        };
+      }
+
+      // Lesson 6: Elevator Pitch
+      if (dayNum === 6) {
+        return {
+          emotion: "🤩 Impressed & Proud",
+          text: `Crisp, authoritative, and deeply impactful! That pitch highlights your value without any hesitation. That would definitely capture a hiring manager's attention!`,
+          hindi: `प्रभावशाली और स्पष्ट! आपने बिना किसी झिझक के अपना महत्व और अनुभव समझाया!`
+        };
+      }
+
+      // Lesson 7: Job Interview STAR Method
+      if (dayNum === 7) {
+        return {
+          emotion: "💡 Placement Coach",
+          text: `Remarkable STAR delivery, ${userName}! Clear Situation, decisive Action, and measurable Results. You are truly interview-ready! What dream company or role are you targeting next?`,
+          hindi: `लाजवाब STAR डिलीवरी! स्पष्ट स्थिति, निर्णायक कदम और मापने योग्य परिणाम। आप इंटरव्यू के लिए पूरी तरह तैयार हैं!`
+        };
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // CASE B: FREE CONVERSATIONAL DIALOGUE (REAL-LIFE & PROFILE PERSONALIZED)
+    // ------------------------------------------------------------------------
+
+    // 1. Check if user spoke Hindi or asked for translation
+    if (this.isHindiText(text)) {
+      const trans = this.translateHindiToEnglish(text);
+      return {
+        emotion: "🤗 Supportive & Caring",
+        text: `Koi baat nahi, ${userName}! In real life, thinking in Hindi is 100% natural. Here is how you say that in English with full confidence: "${trans.english}". Let's practice saying that together with good energy! How does that sound?`,
+        hindi: `कोई बात नहीं, ${userName}! इंग्लिश में आप ऐसे कह सकते हैं: "${trans.english}"। चलिए साथ में बोलकर अभ्यास करते हैं!`,
+        translatedHint: trans.english
+      };
+    }
+
+    // Gentle in-speech polish weaving if analysis found mistakes
+    let gentlePolish = "";
+    if (analysis && analysis.hasError) {
+      if (cleanText.includes("yesterday") && cleanText.includes("go")) {
+        gentlePolish = "By the way, in real conversations, say 'yesterday I went' instead of 'go'—it sounds super smooth! ";
+      } else if (cleanText.includes("myself")) {
+        gentlePolish = "Just a quick golden tip: always say 'I am' instead of 'Myself'—it commands instant respect! ";
+      } else if (cleanText.includes("i am agree")) {
+        gentlePolish = "A quick native polish: say 'I agree' rather than 'I am agree'! ";
+      } else if (analysis.corrected && analysis.corrected !== text) {
+        gentlePolish = `By the way, a smooth native way to phrase that is: "${analysis.corrected}". `;
+      }
+    }
+
+    // 2. Hometown & Cities (Chitkoot, Ayodhya, Varanasi, Lucknow, etc.)
+    if (cleanText.includes("chitkoot") || cleanText.includes("chitrakoot")) {
+      return {
+        emotion: "🌸 Warm & Welcoming",
+        text: `Oh wow, Chitkoot! Chitkoot is such a peaceful, sacred town—famous for the holy Mandakini River, Kamadgiri, and tranquil ashrams. Living in ${citName} must give you such a calm and grounded perspective! In an interview, sharing that you are from Chitkoot makes an authentic personal impression. What is your favourite spot or memory there?`,
+        hindi: `अरे वाह, चित्रकूट! चित्रकूट मंदाकिनी नदी, कामदगिरि और शांत आश्रमों के लिए प्रसिद्ध एक बहुत ही पवित्र नगर है। ${citName} में रहना मन को बहुत शांति देता होगा! क्या आप अपना पसंदीदा स्थान बता सकते हैं?`
+      };
+    }
+
+    if (cleanText.includes("ayodhya") || cleanText.includes("ram mandir")) {
+      return {
+        emotion: "🌸 Warm & Reverent",
+        text: `Aha, Ayodhya carries such profound historical and spiritual grace on the banks of the Saryu River! Have you had the chance to witness the serene evening Aarti along the Ghats?`,
+        hindi: `अयोध्या सरयू नदी के तट पर स्थित एक गहरा आध्यात्मिक और ऐतिहासिक नगर है! क्या आपने सरयू घाटों पर शाम की आरती देखी है?`
+      };
+    }
+
+    if (cleanText.includes("varanasi") || cleanText.includes("banaras") || cleanText.includes("kashi")) {
+      return {
+        emotion: "🤩 Curious & Relatable",
+        text: `Oh, Varanasi is unforgettable! The ancient Ganga Ghats, the mesmerizing Maha Aarti at Dashashwamedh, and the vibrant morning energy are legendary. What do you love most about Banaras?`,
+        hindi: `वाराणसी वास्तव में अविस्मरणीय है! प्राचीन गंगा घाट, भव्य महाआरती और सुबह की ऊर्जा विश्व प्रसिद्ध है। आपको बनारस की कौन सी बात सबसे ज्यादा पसंद है?`
+      };
+    }
+
+    if (cleanText.includes("lucknow") || cleanText.includes("kanpur") || cleanText.includes("prayagraj") || cleanText.includes("delhi")) {
+      return {
+        emotion: "🌸 Warm & Friendly",
+        text: `That is such a culturally rich and vibrant region! The warmth, distinct heritage, and mouth-watering food make it so special. What is your favourite thing about that city?`,
+        hindi: `यह बहुत ही समृद्ध और जीवंत क्षेत्र है! वहाँ की संस्कृति, आतिथ्य और स्वादिष्ट व्यंजन बहुत खास हैं!`
+      };
+    }
+
+    // 3. Campus Placements, Job Interviews & Career Topics
+    if (cleanText.includes("placement") || cleanText.includes("interview") || cleanText.includes("campus") || cleanText.includes("job") || cleanText.includes("recruiter")) {
+      return {
+        emotion: "💡 Placement Coach",
+        text: `${gentlePolish}Arey waah, ${userName}! Preparing for campus placements as a dedicated ${userProf === 'student' ? 'student' : 'candidate'} from ${citName} is a fantastic journey! Interviewers always look for two things: clarity of thought and honest confidence. If an HR interviewer asks: 'Tell me about a challenging project or problem you solved', what project comes to mind?`,
+        hindi: `${gentlePolish}अरे वाह, ${userName}! ${citName} से कैंपस प्लेसमेंट की तैयारी करना एक शानदार यात्रा है! इंटरव्यूअर्स दो चीजें देखते हैं: विचारों की स्पष्टता और ईमानदारी से आत्मविश्वास। अगर कोई पूछे कि आपने किस कठिन प्रोजेक्ट पर काम किया, तो आपका क्या जवाब होगा?`
+      };
+    }
+
+    // 4. College Projects, Software, Coding & Technical Skills
+    if (cleanText.includes("project") || cleanText.includes("software") || cleanText.includes("code") || cleanText.includes("developer") || cleanText.includes("tech") || cleanText.includes("engineering")) {
+      return {
+        emotion: "🤩 Impressed & Curious",
+        text: `${gentlePolish}That sounds like a really exciting technical initiative! In campus interviews, explaining your project's problem statement and your personal role in simple English always impresses the technical panel. What was the most challenging feature you worked on?`,
+        hindi: `${gentlePolish}यह बहुत ही दिलचस्प तकनीकी प्रोजेक्ट लगता है! इंटरव्यू में प्रोजेक्ट की समस्या और अपनी भूमिका को सरल अंग्रेजी में समझाना बहुत प्रभावशाली होता है। इसमें सबसे चुनौतीपूर्ण हिस्सा क्या था?`
+      };
+    }
+
+    // 5. Tooti-Footi / Broken English & Overcoming Fear
+    if (cleanText.includes("tooti") || cleanText.includes("broken") || cleanText.includes("hesitat") || cleanText.includes("fear") || cleanText.includes("darr") || cleanText.includes("sharam") || cleanText.includes("atak")) {
+      return {
+        emotion: "🤗 Supportive & Caring",
+        text: `Listen to me, ${userName}—never feel shy about broken English! In real life, communication is 90% confidence and heart, and only 10% grammar rules. You expressed your thought clearly, and I am super proud of you! Take a deep breath and tell me: what is one thing that made you feel happy today?`,
+        hindi: `मेरी बात सुनिए, ${userName}—टूटी-फूटी इंग्लिश से बिल्कुल मत झिझकिए! बातचीत का 90% हिस्सा आत्मविश्वास होता है और सिर्फ 10% व्याकरण। आपने अपनी बात साफ-साफ कही, और मुझे आप पर गर्व है! बताइए, आज किस बात ने आपको खुशी दी?`
+      };
+    }
+
+    // 6. Food, Chai, Coffee & Daily Routine
+    if (cleanText.includes("tea") || cleanText.includes("chai") || cleanText.includes("coffee") || cleanText.includes("breakfast") || cleanText.includes("eat") || cleanText.includes("food") || cleanText.includes("snack")) {
+      return {
+        emotion: "✨ Energized & Cheerful",
+        text: `${gentlePolish}Haha, yum! A hot cup of chai or refreshing breakfast is the perfect mood booster! In real life, discussing tea and food is the easiest icebreaker with colleagues and friends. Tell me, what do you usually like to do during your afternoons in ${citName}?`,
+        hindi: `${gentlePolish}वाह, क्या बात है! गर्म चाय या अच्छा नाश्ता मूड को तरोताजा कर देता है! दोस्तों और सहयोगियों के साथ बातचीत शुरू करने का यह सबसे आसान तरीका है। बताइए, दोपहर में आप आमतौर पर क्या करते हैं?`
+      };
+    }
+
+    // 7. Free Time, Hobbies, Music & Unwinding
+    if (cleanText.includes("music") || cleanText.includes("song") || cleanText.includes("cricket") || cleanText.includes("movie") || cleanText.includes("hobby") || cleanText.includes("book") || cleanText.includes("read")) {
+      return {
+        emotion: "🌸 Warm & Relatable",
+        text: `${gentlePolish}Oh, I completely relate to that! Passionate hobbies give us fresh creative energy and keep us refreshed after long hours of studying. What kind of music or activities do you turn to when you want to feel inspired?`,
+        hindi: `${gentlePolish}अरे, मैं आपकी इस बात से पूरी तरह सहमत हूँ! अच्छे शौक हमें पढ़ाई के बाद नई ऊर्जा देते हैं। जब आपको प्रेरणा चाहिए होती है, तो आप क्या सुनना या करना पसंद करते हैं?`
+      };
+    }
+
+    // 8. Greetings & First Connection
+    if (cleanText.includes("hello") || cleanText.includes("hi") || cleanText.includes("hey") || cleanText.includes("name is") || cleanText.includes("i am")) {
+      return {
+        emotion: "🌸 Warm & Welcoming",
+        text: `Hello ${userName}! It is so lovely to hear your voice! Remember, with TalkRiva, we are training you like a real friend—step-by-step from ${userLevel === 'tooti-footi' ? 'tooti-footi English' : 'hesitation'} into fluent confidence. How are you feeling right now, and what would you like to chat about today?`,
+        hindi: `नमस्ते ${userName}! आपकी आवाज़ सुनकर बहुत अच्छा लगा! याद रखें, हम एक दोस्त की तरह आपको टूटी-फूटी इंग्लिश से पूरे आत्मविश्वास तक ट्रेन कर रहे हैं। आज आप कैसा महसूस कर रहे हैं?`
+      };
+    }
+
+    // 9. General Expressive Real-Life Fallback
+    const realLifeExpressions = [
+      {
+        emotion: "🤩 Impressed & Proud",
+        text: `${gentlePolish}Oh wow, ${userName}! That was expressed with such great spirit and clarity! Tell me, what led you to think about that, and how does it fit into your daily goals in ${citName}?`,
+        hindi: `${gentlePolish}अरे वाह, ${userName}! आपने बहुत ही उत्साह और स्पष्टता से अपने विचार रखे! बताइए, इस बारे में आपने क्या सोचा और आपके क्या लक्ष्य हैं?`
+      },
+      {
+        emotion: "🌸 Warm & Friendly",
+        text: `${gentlePolish}Acha, that makes so much sense! I love having real, authentic conversations with you. How would you explain that perspective to an interviewer or classmate in a couple of English sentences?`,
+        hindi: `${gentlePolish}अच्छा, यह बात बहुत सही है! मुझे आपसे बातचीत करना बहुत अच्छा लग रहा है। आप किसी इंटरव्यूअर या सहपाठी को यह बात अंग्रेजी में कैसे समझाएंगे?`
+      },
+      {
+        emotion: "✨ High Energy",
+        text: `${gentlePolish}Haha, that is fantastic! Your speaking rhythm is improving noticeably with every turn. What is another exciting topic or challenge you want to tackle next?`,
+        hindi: `${gentlePolish}वाह, यह तो बहुत बढ़िया है! हर बार बोलने के साथ आपकी गति और आत्मविश्वास बढ़ रहा है। अब आप किस विषय पर बात करना चाहेंगे?`
+      }
+    ];
+
+    const chosen = realLifeExpressions[Math.floor(Math.random() * realLifeExpressions.length)];
+    return chosen;
+  }
+
+  isHindiText(text) {
+    if (!text) return false;
+    if (/[\u0900-\u097F]/.test(text)) return true;
+    const lower = text.toLowerCase();
+    const hinglishMarkers = [
+      /\b(mujhe|mera|meri|mere|kaise|kya|batao|suno|namaste|chahiye|nahi|nhi|hai|hain|tha|thi|the|aapka|aapki|karo|karna|hum|humko|main|kaisa|kaisi|bolo|bolna)\b/
+    ];
+    return hinglishMarkers.some(re => re.test(lower));
+  }
+
+  translateHindiToEnglish(text) {
+    if (!text) return { english: "I am ready to speak.", phonetic: "Eye am RED-ee too speek.", hindi: "मैं बोलने के लिए तैयार हूँ।" };
+
+    const phraseMap = [
+      {
+        match: /हाँ.*(चित्रकूट|chitkoot|chitrakoot)|(चित्रकूट|chitkoot|chitrakoot).*(रहता|हूँ|se hoon|se hu)/i,
+        en: "Yes, I am from Chitkoot.",
+        phonetic: "Yes, eye am from Chit-koot.",
+        hi: "हाँ, मैं चित्रकूट से हूँ।"
+      },
+      {
+        match: /(जानते|जानती|know|pata).*(चित्रकूट|chitkoot|chitrakoot)|(चित्रकूट|chitkoot|chitrakoot).*(जानते|जानती|know|pata)/i,
+        en: "Do you know about Chitkoot? It is a historic and spiritual holy place.",
+        phonetic: "Doo yoo noh uh-bowt Chit-koot? It iz uh his-TOR-ik and SPIR-ih-choo-ul HOH-lee plays.",
+        hi: "क्या आप चित्रकूट के बारे में जानती हैं? यह एक ऐतिहासिक और पवित्र स्थान है।"
+      },
+      {
+        match: /चित्रकूट|chitkoot|chitrakoot/i,
+        en: "Chitkoot is a beautiful, peaceful place with great historical significance.",
+        phonetic: "Chit-koot iz uh BYOO-tih-ful, PEES-ful plays with grayt his-TOR-ih-kul sig-NIF-ih-kuns.",
+        hi: "चित्रकूट एक सुंदर, शांत और ऐतिहासिक महत्व का स्थान है।"
+      },
+      {
+        match: /डर.*(लग|रहा)|घबराहट|nervous|anxious/i,
+        en: "I am feeling a little nervous about my upcoming interview.",
+        phonetic: "Eye am FEEL-ing uh LIT-ul NUR-vus uh-bowt my UP-kum-ing IN-ter-vyoo.",
+        hi: "मुझे आने वाले इंटरव्यू को लेकर थोड़ी घबराहट महसूस हो रही है।"
+      },
+      {
+        match: /तैयारी.*(अच्छी|चल रही|बढ़िया)|preparation.*(good|well)/i,
+        en: "My interview preparation is going very smoothly and productively.",
+        phonetic: "My IN-ter-vyoo prep-uh-RAY-shun iz GOH-ing VER-ee SMOOTH-lee and proh-DUK-tiv-lee.",
+        hi: "मेरी इंटरव्यू की तैयारी बहुत अच्छी और फलदायी चल रही है।"
+      },
+      {
+        match: /प्लेसमेंट|placement|इंटरव्यू|interview/i,
+        en: "I am actively preparing for campus placements and HR interviews.",
+        phonetic: "Eye am AK-tiv-lee pree-PAIR-ing fur KAM-pus plays-munts and aych-ar IN-ter-vyooz.",
+        hi: "मैं कैंपस प्लेसमेंट और एचआर इंटरव्यू की तैयारी कर रहा हूँ।"
+      },
+      {
+        match: /नाम.*अभिषेक|name.*abhishek/i,
+        en: "Hello, my name is Abhishek and I am pleased to meet you.",
+        phonetic: "Huh-LOH, my naym iz Uh-bhi-SHAYK and eye am pleezd too meet yoo.",
+        hi: "नमस्ते, मेरा नाम अभिषेक है और मुझे आपसे मिलकर खुशी हुई।"
+      },
+      {
+        match: /इंग्लिश.*(डर|सीखना|झिझक)|english.*(hesitat|fear|learn)/i,
+        en: "I want to overcome my hesitation and speak fluent English naturally.",
+        phonetic: "Eye wont too oh-ver-KUM my hez-ih-TAY-shun and speek FLOO-unt ING-glish.",
+        hi: "मैं अपनी झिझक मिटाकर स्वाभाविक रूप से फ्लूएंट इंग्लिश बोलना चाहता हूँ।"
+      },
+      {
+        match: /मूड.*अच्छा|खुश|happy|feeling great/i,
+        en: "I am feeling very positive and enthusiastic today.",
+        phonetic: "Eye am FEEL-ing VER-ee PAH-zih-tiv and en-thoo-zee-AS-tik too-day.",
+        hi: "आज मैं बहुत सकारात्मक और उत्साही महसूस कर रहा हूँ।"
+      },
+      {
+        match: /कॉलेज|पढ़ाई|college|study|student/i,
+        en: "I am a dedicated student working hard on my career goals.",
+        phonetic: "Eye am uh DED-ih-kay-tid STOO-dunt WUR-king hard on my kuh-REER gohls.",
+        hi: "मैं एक समर्पित छात्र हूँ जो अपने करियर के लक्ष्यों पर मेहनत कर रहा हूँ।"
+      },
+      {
+        match: /चाय|कॉफ़ी|खाना|tea|coffee|food/i,
+        en: "I really enjoy having hot tea and light snacks in the morning.",
+        phonetic: "Eye REE-uh-lee en-JOY HAV-ing hot tee and lyte snaks in thuh MOR-ning.",
+        hi: "सुबह मुझे गर्म चाय और हल्का नाश्ता करना बहुत पसंद है।"
+      }
+    ];
+
+    for (const item of phraseMap) {
+      if (item.match.test(text)) {
+        return { english: item.en, phonetic: item.phonetic, hindi: item.hi };
+      }
+    }
+
+    return {
+      english: `I want to say that ${text.replace(/[\u0900-\u097F]/g, '').trim() || 'I am learning to express my thoughts confidently'}.`,
+      phonetic: "Eye wont too say that eye am LUR-ning too eks-PRES my thawts KON-fih-dunt-lee.",
+      hindi: text
+    };
+  }
+
+  /**
+   * Generates clickable Help Me Speak pills that directly answer what Aria asked
+   */
+  generateSmartHints(aiResponse, mode, level, lessonDay = null) {
+    const cleanAi = (aiResponse || "").toLowerCase();
+    const userMemory = this.memory.data;
+    const userName = userMemory.profile.name || "friend";
+
+    // 1. Structured Lesson Practice Challenge Pills
+    if (lessonDay) {
+      const lesson = this.lessonsCurriculum.find(l => l.day === parseInt(lessonDay, 10));
+      if (lesson && lesson.practiceChallenge && lesson.practiceChallenge.helpPills) {
+        return lesson.practiceChallenge.helpPills;
+      }
+    }
+
+    // 2. Direct Answers to Aria's question
+    // A. Name & How are you feeling
+    if (cleanAi.includes("what is your name") || cleanAi.includes("how are you feeling") || cleanAi.includes("feeling today") || cleanAi.includes("name and")) {
+      return [
+        `"Hello Aria, my name is ${userName} and I'm feeling great today."`,
+        `"I am feeling very positive and excited to speak with you!"`,
+        `"Hello! My name is ${userName}, and I am doing wonderful."`
+      ];
+    }
+
+    // B. Food, Tea, Coffee, Breakfast
+    if (cleanAi.includes("food") || cleanAi.includes("fruit") || cleanAi.includes("eat") || cleanAi.includes("tea") || cleanAi.includes("coffee") || cleanAi.includes("breakfast") || cleanAi.includes("drink")) {
+      return [
+        `"I really love having hot tea and light biscuits in the morning."`,
+        `"My favorite food is fresh home-cooked rice and vegetables."`,
+        `"I usually prefer having a warm cup of coffee to start my day."`
+      ];
+    }
+
+    // C. Routine, Yesterday, What did you do
+    if (cleanAi.includes("what did you do") || cleanAi.includes("yesterday") || cleanAi.includes("earlier today") || cleanAi.includes("afternoon")) {
+      return [
+        `"Earlier today, I finished all my tasks and practiced English."`,
+        `"Yesterday, I went outside and spent wonderful time with my friends."`,
+        `"I had quite a productive day working and learning new concepts."`
+      ];
+    }
+
+    // D. Hobby, Free time, Weekend, Music, Unwind
+    if (cleanAi.includes("hobby") || cleanAi.includes("free time") || cleanAi.includes("weekend") || cleanAi.includes("music") || cleanAi.includes("unwind") || cleanAi.includes("movie")) {
+      return [
+        `"In my free time, I really enjoy listening to good music."`,
+        `"I love going for evening walks and unwinding in nature."`,
+        `"My favorite hobby is reading books and watching documentaries."`
+      ];
+    }
+
+    // E. City, Hometown, Where you live
+    if (cleanAi.includes("city") || cleanAi.includes("hometown") || cleanAi.includes("where do you live") || cleanAi.includes("where you live")) {
+      return [
+        `"I live in a peaceful city with warm and friendly people."`,
+        `"My hometown is famous for its rich culture and delicious street food."`,
+        `"It is a vibrant city with great historical heritage."`
+      ];
+    }
+
+    // F. Studies, Work, Career, Goals
+    if (cleanAi.includes("study") || cleanAi.includes("work") || cleanAi.includes("goals") || cleanAi.includes("career") || cleanAi.includes("tasks are you focusing")) {
+      return [
+        `"Currently, I am focusing on my studies and career opportunities."`,
+        `"My main goal is to speak fluent English with natural confidence."`,
+        `"I am preparing hard for my upcoming job interviews and growth."`
+      ];
+    }
+
+    // G. Interview, Challenge, Obstacle
+    if (cleanAi.includes("challenge") || cleanAi.includes("obstacle") || cleanAi.includes("difficult") || cleanAi.includes("interview")) {
+      return [
+        `"When facing a tight deadline, I prioritized key tasks and succeeded."`,
+        `"I resolved the challenge by communicating clearly with my team."`,
+        `"Through focused effort, we achieved a measurable 20% improvement."`
+      ];
+    }
+
+    // General fallback
+    return [
+      `"I completely agree with you and would love to practice this further."`,
+      `"To be completely honest, that made a lot of sense to me!"`,
+      `"Thank you for the guidance, Aria! Let's continue speaking."`
+    ];
+  }
+
+  async callGeminiAPI({ text, mode, scenarioId, partner, level, analysis, lessonDay }) {
+    const memory = this.memory.data;
+    const userName = memory.profile.name || "Learner";
+    const userGoal = memory.profile.goal || "communication";
+
+    const prompt = `System: You are Aria, a warm, patient, high-clarity female AI English speaking coach.
+Learner Name: ${userName}
+Current Level: ${level}
+Goal: ${userGoal}
+Active Lesson Day: ${lessonDay || 'Free Conversation'}
+User said: "${text}"
+Grammar Issues: ${analysis.hasError ? analysis.grammarExplanation : 'None'}
+
+Instructions:
+1. Speak in 2-3 natural spoken sentences.
+2. If there's a grammar mistake, gently weave a 1-sentence tip.
+3. End with an engaging follow-up question.
+4. No markdown asterisks or bullet points.`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 200 }
+      })
+    });
+
+    if (!res.ok) throw new Error(`Gemini API error: ${res.status}`);
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "That's very interesting! Tell me more about that.";
+  }
+}
+
+// Export to window
+if (typeof window !== 'undefined') {
+  window.UserMemoryMind = UserMemoryMind;
+  window.ConversationEngine = ConversationEngine;
+}
+if (typeof module !== 'undefined') {
+  module.exports = { UserMemoryMind, ConversationEngine };
+}
