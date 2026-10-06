@@ -15,7 +15,7 @@ An AI-powered spoken English partner and communication improvement web app inspi
 - **Ping-Pong Conversational Dynamic**: Emotional reaction ➔ relatable context ➔ gentle spoken polish ➔ engaging follow-up question.
 
 ### 2. 🧠 Persistent One-Time Memory Mind
-- **Ek Hi Baar Me Data Save**: Remembers learner name, hometown/city (*Chitkoot, Delhi, Lucknow, etc.*), native level (*Tooti-Footi, Hesitant, Intermediate, Advanced*), main goal (*Campus Placements/Job Interviews, Daily Chat*), and profession.
+- **Ek Hi Baar Me Data Save**: Remembers learner name, native level (*Tooti-Footi, Hesitant, Intermediate, Advanced*), main goal (*Campus Placements/Job Interviews, Daily Chat, Overcome Hesitation*), and background/profession.
 - Profile stays permanently remembered across sessions via `localStorage` and `UserMemoryMind`.
 - Starters, interview practice, and tips adapt dynamically to the saved profile.
 

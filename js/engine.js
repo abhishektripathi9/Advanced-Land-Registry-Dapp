@@ -33,13 +33,12 @@ class UserMemoryMind {
     return {
       profile: {
         name: hasStorage ? (localStorage.getItem('talkriva_user_name') || '') : '',
-        city: hasStorage ? (localStorage.getItem('talkriva_user_city') || '') : '',
         level: hasStorage ? (localStorage.getItem('talkriva_user_level') || 'tooti-footi') : 'tooti-footi',
         goal: hasStorage ? (localStorage.getItem('talkriva_user_goal') || 'job-interview') : 'job-interview',
         profession: hasStorage ? (localStorage.getItem('talkriva_user_profession') || 'student') : 'student'
       },
       memoryNotes: [
-        "Aria understands learner wants to overcome broken English step-by-step.",
+        "Aria understands learner wants to build confident spoken English step-by-step.",
         "Targeting clear female voice pronunciation and conversational confidence."
       ],
       userFacts: {},
@@ -65,14 +64,12 @@ class UserMemoryMind {
     this.data.profile = { ...this.data.profile, ...profile };
     if (typeof localStorage !== 'undefined') {
       if (profile.name) localStorage.setItem('talkriva_user_name', profile.name);
-      if (profile.city) localStorage.setItem('talkriva_user_city', profile.city);
       if (profile.level) localStorage.setItem('talkriva_user_level', profile.level);
       if (profile.goal) localStorage.setItem('talkriva_user_goal', profile.goal);
       if (profile.profession) localStorage.setItem('talkriva_user_profession', profile.profession);
     }
-    if (profile.city) {
-      this.data.userFacts['city'] = profile.city;
-      this.addNote(`Learner lives in or is from ${profile.city}.`);
+    if (profile.name) {
+      this.data.userFacts['name'] = profile.name;
     }
     if (profile.goal) {
       this.addNote(`Primary training focus: ${profile.goal}.`);
@@ -104,17 +101,6 @@ class UserMemoryMind {
 
   extractFacts(text) {
     const lower = text.toLowerCase();
-    const cities = ['chitkoot', 'chitrakoot', 'delhi', 'mumbai', 'bangalore', 'varanasi', 'banaras', 'ayodhya', 'lucknow', 'kanpur', 'prayagraj', 'allahabad', 'kolkata', 'chennai', 'hyderabad', 'pune', 'jaipur', 'patna', 'bhopal', 'ahmedabad', 'noida', 'gurgaon', 'chandigarh', 'indore'];
-    for (const c of cities) {
-      if (lower.includes(c)) {
-        const cityName = c.charAt(0).toUpperCase() + c.slice(1);
-        this.data.userFacts['city'] = cityName;
-        this.data.profile.city = cityName;
-        if (typeof localStorage !== 'undefined') localStorage.setItem('talkriva_user_city', cityName);
-        this.addNote(`Learner mentioned living in or being from ${cityName}.`);
-        break;
-      }
-    }
 
     if (lower.includes('cricket')) this.addNote('Learner has an interest in cricket.');
     if (lower.includes('music')) this.addNote('Learner enjoys listening to music.');
@@ -352,10 +338,10 @@ class ConversationEngine {
           { word: 'Passionate', type: 'adj', phonetic: 'PASH-uh-nit', hindi: 'उत्साही / भावुक', def: 'Having or showing strong feelings of enthusiasm.', ex: 'I am passionate about building intuitive digital software.' },
           { word: 'Leisure', type: 'noun', phonetic: 'LEE-zhur', hindi: 'फुर्सत / खाली समय', def: 'Free time spent away from business or duties.', ex: 'In my leisure hours, I enjoy reading autobiographies.' },
           { word: 'Engage', type: 'verb', phonetic: 'en-GAYJ', hindi: 'बातचीत में जोड़ना / ध्यान खींचना', def: 'Occupy, attract, or involve someone\'s interest or attention.', ex: 'Asking open-ended questions helps engage people effortlessly.' },
-          { word: 'Inquire', type: 'verb', phonetic: 'in-KWY-er', hindi: 'विनम्रता से पूछताछ करना / जानना', def: 'Ask for information from someone in a polite manner.', ex: 'May I inquire about your recent travels to Varanasi?' },
-          { word: 'Heritage', type: 'noun', phonetic: 'HAIR-ih-tij', hindi: 'सांस्कृतिक धरोहर / विरासत', def: 'Valued objects and qualities such as historic sites passed down through generations.', ex: 'Chitkoot is renowned for its rich spiritual and cultural heritage.' },
+          { word: 'Inquire', type: 'verb', phonetic: 'in-KWY-er', hindi: 'विनम्रता से पूछताछ करना / जानना', def: 'Ask for information from someone in a polite manner.', ex: 'May I politely inquire about your upcoming projects and goals?' },
+          { word: 'Heritage', type: 'noun', phonetic: 'HAIR-ih-tij', hindi: 'सांस्कृतिक धरोहर / विरासत', def: 'Valued objects and qualities such as historic sites passed down through generations.', ex: 'Our country is celebrated worldwide for its rich and diverse cultural heritage.' },
           { word: 'Reciprocal', type: 'adj', phonetic: 'rih-SIP-ruh-kul', hindi: 'परस्पर / दोनों तरफ से चलने वाला', def: 'Given, felt, or done in return.', ex: 'Good conversation requires reciprocal sharing and active listening.' },
-          { word: 'Memorable', type: 'adj', phonetic: 'MEM-er-uh-bul', hindi: 'यादगार / अविस्मरणीय', def: 'Easily remembered, especially because of being special or unusual.', ex: 'Our team meetup in Ayodhya was truly memorable.' },
+          { word: 'Memorable', type: 'adj', phonetic: 'MEM-er-uh-bul', hindi: 'यादगार / अविस्मरणीय', def: 'Easily remembered, especially because of being special or unusual.', ex: 'Our annual team conference was an exceptionally memorable milestone.' },
           { word: 'Rapport', type: 'noun', phonetic: 'ra-POR', hindi: 'आपसी सामंजस्य / दोस्ताना तालमेल', def: 'A close and harmonious relationship where people understand each other.', ex: 'Finding shared hobbies helps build instant rapport with colleagues.' }
         ],
         commonMistake: {
@@ -1206,104 +1192,102 @@ class ConversationEngine {
    * Each with rich daily-use and power vocabularies, Hindi translation,
    * and targeted hint drawer data so the user never gets bored!
    */
-  getDynamicStarter(userName = "Learner", level = "tooti-footi", goal = "job-interview", city = "", profession = "student") {
+  getDynamicStarter(userName = "Learner", level = "tooti-footi", goal = "job-interview", profession = "student") {
     const prof = this.memory.data.profile;
     const name = userName || prof.name || "friend";
-    const userCity = (city || prof.city || this.memory.data.userFacts['city'] || "").trim();
     const userGoal = goal || prof.goal || "job-interview";
     const userLevel = level || prof.level || "tooti-footi";
     const userProf = profession || prof.profession || "student";
-    const citName = userCity || "Chitkoot";
     const profLabel = userProf === 'student' ? 'college student' : (userProf === 'tech' ? 'software aspirant' : 'professional');
 
     const starters = [
-      // 1. Placement & HR Interview with Saved City & Profession
+      // 1. Career & Placement Introduction
       {
         id: 'starter-profile-placement-intro',
         emotion: '💡 Placement Coach',
-        text: `Hello ${name}! As an ambitious ${profLabel} from ${citName} preparing for campus placements, the very first question recruiters ask is: 'Tell me about yourself'. How would you introduce your background, college, and career interests from ${citName} in 2-3 simple English sentences?`,
-        hindi: `नमस्ते ${name}! ${citName} से कैंपस प्लेसमेंट की तैयारी कर रहे ${profLabel} के रूप में, इंटरव्यूअर्स का पहला सवाल होता है: 'Tell me about yourself'। आप अपने कॉलेज और शहर के बारे में 2-3 सरल वाक्यों में अंग्रेजी में कैसे परिचय देंगे?`,
-        whatAsked: `आरिया पूछ रही है: '${citName} से अपने कॉलेज और बैकग्राउंड का परिचय 2-3 सरल वाक्यों में दें!'`,
-        targetText: `Hello! My name is ${name}. I am from ${citName}, and I am actively preparing for campus placements and technical interviews.`,
-        phonetic: `Huh-LOH! My naym iz ${name}. Eye am fruhm ${citName}, and eye am AK-tiv-lee pree-PAIR-ing fur KAM-pus plays-munts and tek-NIH-kul IN-ter-vyooz.`,
-        hindiMeaning: `नमस्ते! मेरा नाम ${name} है। मैं ${citName} से हूँ, और मैं कैंपस प्लेसमेंट और टेक्निकल इंटरव्यू की सक्रिय तैयारी कर रहा हूँ।`
+        text: `Hello ${name}! Welcome to our practice session. As an ambitious ${profLabel} preparing for future career opportunities, one of the most essential questions recruiters ask is: 'Could you tell me a little about yourself?' How would you introduce your educational background, core strengths, and career ambitions in two or three confident English sentences?`,
+        hindi: `नमस्ते ${name}! हमारे अभ्यास सत्र में आपका स्वागत है। एक महत्वाकांक्षी ${profLabel} के रूप में, इंटरव्यूअर्स का सबसे महत्वपूर्ण सवाल होता है: 'Tell me about yourself'। आप अपनी शिक्षा, मुख्य ताकत और करियर के लक्ष्यों का परिचय 2-3 आत्मविश्वास से भरे वाक्यों में कैसे देंगे?`,
+        whatAsked: `आरिया पूछ रही है: 'अपने बैकग्राउंड, मुख्य खूबियों और करियर लक्ष्यों का परिचय 2-3 सरल वाक्यों में दें!'`,
+        targetText: `Hello! My name is ${name}. I am a dedicated ${profLabel}, and I am actively working on improving my communication skills and career readiness.`,
+        phonetic: `Huh-LOH! My naym iz ${name}. Eye am uh DED-ih-kay-tid ${profLabel}, and eye am AK-tiv-lee WUR-king on im-PROO-ving my kuh-myoo-nih-KAY-shun skilz and kuh-REER RED-ee-nis.`,
+        hindiMeaning: `नमस्ते! मेरा नाम ${name} है। मैं एक समर्पित ${profLabel} हूँ, और मैं अपने संचार कौशल और करियर की तैयारी को बेहतर बनाने पर सक्रिय रूप से काम कर रहा हूँ।`
       },
-      // 2. Hometown Culture & Real-Life Heritage (Chitkoot / Varanasi / Delhi etc.)
+      // 2. Positive Morning Mindset & Routine
       {
-        id: 'starter-profile-hometown',
-        emotion: '🌸 Warm & Welcoming',
-        text: `Namaste ${name}! It is truly wonderful to connect with you from ${citName}! If an interviewer or new friend asks: 'What is special about ${citName}?', how would you describe the peace, culture, and beauty of ${citName} in English?`,
-        hindi: `नमस्ते ${name}! आपसे ${citName} से जुड़कर बहुत खुशी हुई! अगर कोई पूछे कि ${citName} में क्या खास है, तो आप अपने शहर की शांति और संस्कृति का वर्णन अंग्रेजी में कैसे करेंगे?`,
-        whatAsked: `आरिया पूछ रही है: 'अपने शहर (${citName}) की खासियत या संस्कृति के बारे में अंग्रेजी में बताएं!'`,
-        targetText: `My hometown ${citName} is a very peaceful and culturally rich place known for its serene Mandakini river and warm people.`,
-        phonetic: `My HOHM-town ${citName} iz uh VER-ee PEES-ful and KUL-chur-uh-lee rich plays nohn fur its suh-REEN mun-DAH-kih-nee RIV-er and warm PEE-pul.`,
-        hindiMeaning: `मेरा गृहक्षेत्र ${citName} बहुत ही शांत और सांस्कृतिक रूप से समृद्ध स्थान है जो अपनी शांत मंदाकिनी नदी और मिलनसार लोगों के लिए जाना जाता है।`
+        id: 'starter-profile-morning-mindset',
+        emotion: '🌸 Warm & Inspiring',
+        text: `Good day, ${name}! It is wonderful to have you here today. Successful communicators often emphasize how our morning mindset shapes the rest of our day. What is one positive habit or routine that helps you start your day on a focused and productive note?`,
+        hindi: `शुभ दिन, ${name}! आज आपका यहाँ होना बहुत सुखद है। सफल लोग अक्सर कहते हैं कि सुबह की दिनचर्या पूरे दिन को तय करती है। ऐसी कौन सी अच्छी आदत है जो आपके दिन की शुरुआत को सकारात्मक बनाती है?`,
+        whatAsked: `आरिया पूछ रही है: 'अपने दिन की शुरुआत को सकारात्मक बनाने वाली किसी आदत या रूटीन के बारे में बताएं!'`,
+        targetText: `I like starting my morning with a calm mind, planning my daily goals, and dedicating time to learn something new.`,
+        phonetic: `Eye lyk STAHR-ting my MOR-ning with uh kahm mynd, PLAN-ing my DAY-lee gohlz, and DED-ih-kay-ting tyme too lurn SUM-thing noo.`,
+        hindiMeaning: `मुझे शांत मन से सुबह शुरू करना, अपने दिन के लक्ष्यों की योजना बनाना और कुछ नया सीखने के लिए समय निकालना पसंद है।`
       },
-      // 3. Broken English / Tooti-Footi Reassurance
+      // 3. Overcoming Hesitation & Encouraging Confidence
       {
-        id: 'starter-profile-tooti-footi',
+        id: 'starter-profile-confidence-building',
         emotion: '🤗 Supportive & Caring',
-        text: `Arey ${name}, don't worry at all if your English feels tooti-footi or broken right now! Even top leaders started with broken English. Speak with an open heart: what is one thing that made you smile or feel proud today?`,
-        hindi: `अरे ${name}, बिल्कुल चिंता मत कीजिए अगर आपकी इंग्लिश टूटी-फूटी है! दिल खोलकर बोलिए: आज ऐसी कौन सी बात रही जिससे आपके चेहरे पर मुस्कान आई या गर्व महसूस हुआ?`,
-        whatAsked: `आरिया कह रही है: 'टूटी-फूटी इंग्लिश की चिंता छोड़िए, बताइए आज आपको किस बात से खुशी या गर्व महसूस हुआ!'`,
-        targetText: `Today, I felt proud because I am taking active daily steps to practice speaking English with confidence.`,
-        phonetic: `Too-DAY, eye felt prowd bee-KUZ eye am TAY-king AK-tiv DAY-lee steps too PRAK-tis SPEE-king ING-glish with KAHN-fih-dense.`,
-        hindiMeaning: `आज मुझे गर्व महसूस हुआ क्योंकि मैं आत्मविश्वास के साथ अंग्रेजी बोलने का अभ्यास करने के लिए रोज़ाना सक्रिय कदम उठा रहा हूँ।`
+        text: `Hello ${name}! Please remember that everyone begins their language journey with hesitation before achieving natural fluency. What truly matters is speaking with genuine enthusiasm. What is one personal milestone or achievement you felt proud of recently?`,
+        hindi: `नमस्ते ${name}! याद रखें कि हर व्यक्ति शुरुआत में झिझक के बाद ही धाराप्रवाह बोलना सीखता है। सबसे महत्वपूर्ण बात उत्साह के साथ बोलना है। हाल ही में ऐसी कौन सी बात रही जिस पर आपको गर्व महसूस हुआ?`,
+        whatAsked: `आरिया कह रही है: 'बिना किसी झिझक के दिल खोलकर बताएं कि हाल ही में आपको किस बात पर गर्व या खुशी महसूस हुई!'`,
+        targetText: `Recently, I felt proud because I made a firm commitment to practice speaking English every single day.`,
+        phonetic: `REE-sunt-lee, eye felt prowd bee-KUZ eye mayd uh furm kuh-MIT-munt too PRAK-tis SPEE-king ING-glish EV-ree SING-gul day.`,
+        hindiMeaning: `हाल ही में मुझे गर्व महसूस हुआ क्योंकि मैंने हर रोज़ अंग्रेजी बोलने का अभ्यास करने का पक्का संकल्प लिया है।`
       },
       // 4. College Project & Technical Strength
       {
         id: 'starter-profile-project-skills',
         emotion: '🤩 Impressed & Curious',
-        text: `Hi ${name}! In placement interviews, explaining your college projects simply is a game-changer! Tell me: what is one technical project, skill, or subject you are really excited about?`,
-        hindi: `हाय ${name}! प्लेसमेंट इंटरव्यू में अपने प्रोजेक्ट्स को सरलता से समझाना बहुत बड़ी ताकत है। बताइए: वह कौन सा प्रोजेक्ट या हुनर है जिसमें आपकी सबसे ज्यादा रुचि है?`,
-        whatAsked: `आरिया पूछ रही है: 'अपने कॉलेज प्रोजेक्ट या तकनीकी हुनर के बारे में बताएं!'`,
-        targetText: `I am currently developing an interactive software project that solves practical challenges through modern technology.`,
-        phonetic: `Eye am KUR-ent-lee dih-VEL-up-ing an in-ter-AK-tiv SAHFT-wair PRAH-jekt that sahlvz PRAK-tih-kul CHAL-en-jez throo MAH-durn tek-NAH-luh-jee.`,
-        hindiMeaning: `मैं वर्तमान में एक इंटरएक्टिव सॉफ्टवेयर प्रोजेक्ट विकसित कर रहा हूँ जो आधुनिक तकनीक के माध्यम से व्यावहारिक चुनौतियों को हल करता है।`
+        text: `Hi ${name}! In professional discussions and interviews, explaining your projects with clarity makes an extraordinary first impression. What is an interesting project, skill, or subject you are passionate about exploring right now?`,
+        hindi: `हाय ${name}! इंटरव्यू में अपने प्रोजेक्ट्स को स्पष्टता से समझाना एक बेहतरीन प्रभाव छोड़ता है। वह कौन सा प्रोजेक्ट, हुनर या विषय है जिसमें आपकी सबसे गहरी रुचि है?`,
+        whatAsked: `आरिया पूछ रही है: 'अपने प्रोजेक्ट या किसी पसंदीदा विषय के बारे में 2-3 वाक्यों में बताएं!'`,
+        targetText: `I am currently developing my practical skills and working on projects that solve real-world problems.`,
+        phonetic: `Eye am KUR-unt-lee dih-VEL-up-ing my PRAK-tih-kul skilz and WUR-king on PRAH-jekts that sahlv reel-wurld PRAHB-lumz.`,
+        hindiMeaning: `मैं वर्तमान में अपने व्यावहारिक हुनर को निखार रहा हूँ और ऐसे प्रोजेक्ट्स पर काम कर रहा हूँ जो वास्तविक समस्याओं को हल करते हैं।`
       },
-      // 5. Daily Real-Life Chai, Coffee & Recharge
+      // 5. Daily Real-Life Pause & Recharge
       {
         id: 'starter-profile-daily-chai',
         emotion: '✨ Energized & Cheerful',
-        text: `Hey ${name}! Hope your day is going great in ${citName}! Do you prefer taking a short break with hot tea or coffee to unwind and recharge your energy during your daily routine?`,
-        hindi: `अरे ${name}! आशा है ${citName} में आपका दिन बहुत अच्छा बीत रहा है! पढ़ाई या काम के बीच माइंड रीचार्ज करने के लिए आप गर्म चाय पसंद करते हैं या कॉफ़ी?`,
-        whatAsked: `आरिया पूछ रही है: 'रिफ्रेश होने के लिए आप चाय या कॉफ़ी में से क्या लेना पसंद करते हैं?'`,
-        targetText: `I definitely prefer having a hot cup of tea to refresh my mind and maintain high energy throughout the day.`,
-        phonetic: `Eye DEF-ih-nit-lee pree-FUR HAV-ing uh hot kup uv tee too ree-FRESH my mynd and mayn-TAYN high EN-er-jee throo-OWT thuh day.`,
-        hindiMeaning: `मैं अपने दिमाग को तरोताजा करने और पूरे दिन उच्च ऊर्जा बनाए रखने के लिए निश्चित रूप से गर्म चाय पीना पसंद करता हूँ।`
+        text: `Good day, ${name}! I hope your day is going wonderfully! During a busy routine of studying and working, how do you prefer to take a short pause to refresh your mind—perhaps with a hot cup of tea or a relaxing walk?`,
+        hindi: `शुभ दिन, ${name}! आशा है आपका दिन बहुत अच्छा बीत रहा है! काम या पढ़ाई के बीच अपना मन तरोताजा करने के लिए आप क्या करना पसंद करते हैं?`,
+        whatAsked: `आरिया पूछ रही है: 'थकान मिटाने और रिफ्रेश होने के लिए आप क्या करना पसंद करते हैं?'`,
+        targetText: `I truly enjoy taking a brief afternoon pause with a hot cup of tea to refresh my thoughts and regain my focus.`,
+        phonetic: `Eye TROO-lee en-JOY TAY-king uh breef af-ter-NOON pawz with uh hot kup uv tee too ree-FRESH my thawtz and ree-GAYN my FOH-kus.`,
+        hindiMeaning: `मुझे अपने विचारों को तरोताजा करने और दोबारा ध्यान केंद्रित करने के लिए गर्म चाय के साथ एक छोटा सा ब्रेक लेना बहुत पसंद है।`
       },
-      // 6. Placement Situational: Why Should We Hire You?
+      // 6. Professional Situational: Unique Strengths
       {
         id: 'starter-profile-hire-strength',
         emotion: '💡 Interview Coach',
-        text: `Hello ${name}! Imagine an HR recruiter in a campus interview asks: 'Why should we hire you?' How would you highlight your discipline, adaptability, and passion to learn?`,
-        hindi: `नमस्ते ${name}! कल्पना कीजिए कैंपस इंटरव्यू में एचआर पूछे: 'हम आपको क्यों चुनें?' तो आप अपनी लगन, अनुशासन और सीखने की ललक को कैसे बताएंगे?`,
-        whatAsked: `आरिया पूछ रही है: 'इंटरव्यू में अपनी मेहनत और सीखने की क्षमता को कैसे व्यक्त करेंगे?'`,
-        targetText: `You should hire me because I am a fast learner, deeply disciplined, and enthusiastic about contributing real value to the team.`,
-        phonetic: `Yoo shood HYRE mee bee-KUZ eye am uh fast LUR-ner, DEEP-lee DIS-uh-plind, and en-thoo-zee-AS-tik uh-bowt kun-TRIB-yoo-ting reel VAL-yoo too thuh teem.`,
-        hindiMeaning: `आपको मुझे इसलिए चुनना चाहिए क्योंकि मैं जल्दी सीखता हूँ, गहरा अनुशासित हूँ और टीम में वास्तविक योगदान देने के लिए उत्साही हूँ।`
+        text: `Hello ${name}! Imagine an interviewer looks at your resume and warmly asks: 'What makes you unique, and why should we welcome you to our team?' How would you articulate your dedication, adaptability, and positive attitude?`,
+        hindi: `नमस्ते ${name}! कल्पना कीजिए इंटरव्यूअर पूछे: 'आपकी सबसे बड़ी खूबी क्या है, और हम आपको अपनी टीम में क्यों चुनें?' तो आप अपनी लगन और सकारात्मक सोच को कैसे व्यक्त करेंगे?`,
+        whatAsked: `आरिया पूछ रही है: 'इंटरव्यू में अपनी मेहनत, सीखने की ललक और समर्पण को अंग्रेजी में कैसे बताएंगे?'`,
+        targetText: `You should consider me because I am highly adaptable, consistent in my efforts, and eager to learn and contribute value every single day.`,
+        phonetic: `Yoo shood kun-SID-er mee bee-KUZ eye am HY-lee uh-DAP-tuh-bul, kun-SIS-tunt in my EF-urts, and EE-ger too lurn and kun-TRIB-yoot VAL-yoo EV-ree SING-gul day.`,
+        hindiMeaning: `आपको मुझे चुनना चाहिए क्योंकि मैं बहुत लचीला हूँ, अपने प्रयासों में निरंतर हूँ और हर दिन सीखने व योगदान देने के लिए उत्सुक हूँ।`
       },
       // 7. Free Time Passions & Hobbies
       {
         id: 'starter-profile-hobbies',
         emotion: '🌸 Warm & Relatable',
-        text: `Good to talk with you, ${name}! In real life, connecting over personal hobbies makes conversations smooth and friendly. What kind of music, sports, or hobbies do you enjoy during your leisure time?`,
-        hindi: `आपसे बात करके बहुत खुशी हुई, ${name}! खाली समय में आपको कौन सा संगीत, खेल या शौक पूरा करना सबसे अच्छा लगता है?`,
+        text: `It is an absolute pleasure to speak with you, ${name}! In genuine conversations, sharing our favorite pastimes creates an immediate, friendly connection. What hobbies, sports, or music bring you the greatest joy in your spare time?`,
+        hindi: `आपसे बात करके बहुत खुशी हुई, ${name}! स्वाभाविक बातचीत में अपने शौक साझा करना एक दोस्ताना रिश्ता बनाता है। खाली समय में कौन सा शौक, खेल या संगीत आपको सबसे ज्यादा खुशी देता है?`,
         whatAsked: `आरिया पूछ रही है: 'अपने पसंदीदा शौक, खेल या संगीत के बारे में बताइए!'`,
-        targetText: `In my leisure time, I genuinely enjoy reading informative books, listening to music, and practicing spoken English.`,
-        phonetic: `In my LEE-zhur tyme, eye JEN-yoo-in-lee en-JOY REE-ding in-FOR-muh-tiv books, LIS-ning too MYOO-zik, and PRAK-tih-sing SPOH-kun ING-glish.`,
-        hindiMeaning: `खाली समय में, मुझे ज्ञानवर्धक किताबें पढ़ना, संगीत सुनना और अंग्रेजी बोलने का अभ्यास करना बहुत अच्छा लगता है।`
+        targetText: `In my spare time, I genuinely enjoy reading insightful books, listening to music, and exploring new ideas.`,
+        phonetic: `In my spair tyme, eye JEN-yoo-in-lee en-JOY REE-ding IN-syt-ful books, LIS-ning too MYOO-zik, and ek-SPLOR-ing noo eye-DEE-uz.`,
+        hindiMeaning: `खाली समय में, मुझे ज्ञानवर्धक किताबें पढ़ना, संगीत सुनना और नए विचारों की खोज करना बहुत अच्छा लगता है।`
       },
       // 8. Overcoming Hesitation & Speaking Confidently
       {
         id: 'starter-profile-hesitation',
         emotion: '✨ Inspiring & Motivating',
-        text: `Welcome ${name}! Remember: whenever you feel stuck, take a peaceful 1-second silent pause instead of saying 'Um'. How confident are you feeling about expressing your thoughts in English today?`,
-        hindi: `स्वागत है ${name}! याद रखें: घबराने या 'Um' बोलने की जगह 1 सेकंड का शांत पॉज लें। आज आप अपने विचार रखने में कितना आत्मविश्वासी महसूस कर रहे हैं?`,
-        whatAsked: `आरिया पूछ रही है: 'बिना किसी झिझक के बताएं कि आज आप कितना आत्मविश्वासी महसूस कर रहे हैं!'`,
-        targetText: `I am feeling very optimistic and ready to speak with clear, natural confidence.`,
-        phonetic: `Eye am FEEL-ing VER-ee ahp-tuh-MIS-tik and RED-ee too speek with kleer, NACH-er-ul KAHN-fih-dense.`,
-        hindiMeaning: `मैं बहुत सकारात्मक महसूस कर रहा हूँ और स्पष्ट, स्वाभाविक आत्मविश्वास के साथ बोलने के लिए तैयार हूँ।`
+        text: `Welcome ${name}! Here is an empowering communication secret: whenever you search for the right word, take a serene, deliberate pause instead of rushing. How confident are you feeling about expressing yourself in English today?`,
+        hindi: `स्वागत है ${name}! याद रखें: जब भी शब्द न मिलें, तो घबराने की जगह 1 सेकंड का शांत ठहराव लें। आज आप अपने विचार व्यक्त करने में कितना आत्मविश्वासी महसूस कर रहे हैं?`,
+        whatAsked: `आरिया पूछ रही है: 'शांत मन से बताएं कि आज आप अंग्रेजी बोलने में कितना आत्मविश्वासी महसूस कर रहे हैं!'`,
+        targetText: `I am feeling very optimistic, and I am ready to practice speaking with clear expression and confidence.`,
+        phonetic: `Eye am FEEL-ing VER-ee ahp-tuh-MIS-tik, and eye am RED-ee too PRAK-tis SPEE-king with kleer ek-SPRESH-un and KAHN-fih-dense.`,
+        hindiMeaning: `मैं बहुत सकारात्मक महसूस कर रहा हूँ, और स्पष्ट अभिव्यक्ति और आत्मविश्वास के साथ बोलने का अभ्यास करने के लिए पूरी तरह तैयार हूँ।`
       }
     ];
 
@@ -1375,15 +1359,14 @@ class ConversationEngine {
       }
     }
 
-    // CASE 2: Dynamic Question Analysis based on what Aria just asked
-    // A. Chitkoot & Historical travel
-    if (cleanAi.includes("chitkoot") || cleanAi.includes("varanasi") || cleanAi.includes("historical places") || cleanAi.includes("travel destination")) {
+    // A. Travel, Culture & Memorable Destinations
+    if (cleanAi.includes("travel") || cleanAi.includes("destination") || cleanAi.includes("historical places") || cleanAi.includes("culture")) {
       return {
-        whatAriaIsAsking: "आरिया पूछ रही है: 'चित्रकूट या किसी ऐतिहासिक जगह की यात्रा के बारे में आपका क्या विचार है?'",
-        formula: "Serene destination + Mandakini river + Spiritual heritage",
-        targetText: "Yes, Chitkoot is a serene and holy destination surrounded by the Mandakini river and lush hills.",
-        phonetic: "Yes, CHIT-ruh-koot iz uh suh-REEN and HOH-lee des-tuh-NAY-shun suh-RAWN-did by thuh mun-DAH-kih-nee RIV-er and lush hilz.",
-        hindi: "हाँ, चित्रकूट मंदाकिनी नदी और हरे-भरे पहाड़ों से घिरा एक बहुत ही शांत और पवित्र धार्मिक स्थल है।"
+        whatAriaIsAsking: "आरिया पूछ रही है: 'यात्रा, ऐतिहासिक जगहों या संस्कृति के बारे में आपका क्या विचार है?'",
+        formula: "Enriching travel + Cultural perspectives",
+        targetText: "Traveling allows us to explore diverse cultures and gain fresh, inspiring perspectives.",
+        phonetic: "TRAV-uh-ling uh-LOWZ us too ek-SPLOR dy-VURS KUL-churz and gayn fresh, in-SPY-ring per-SPEK-tivz.",
+        hindi: "यात्रा करने से हमें विभिन्न संस्कृतियों को जानने और नए प्रेरक दृष्टिकोण प्राप्त करने का अवसर मिलता है।"
       };
     }
 
@@ -1573,11 +1556,9 @@ class ConversationEngine {
     const cleanText = text.toLowerCase();
     const prof = this.memory.data.profile;
     const userName = prof.name || "friend";
-    const userCity = (prof.city || this.memory.data.userFacts['city'] || "").trim();
     const userGoal = prof.goal || "job-interview";
     const userLevel = level || prof.level || "tooti-footi";
     const userProf = prof.profession || "student";
-    const citName = userCity || "Chitkoot";
 
     // ------------------------------------------------------------------------
     // CASE A: ACTIVE LESSON PRACTICE MODE
@@ -1590,8 +1571,8 @@ class ConversationEngine {
         if (cleanText.includes("myself")) {
           return {
             emotion: "💡 Coaching & Guiding",
-            text: `Arey ${userName}, you have wonderful energy! Remember our golden first-impression rule: never start with 'Myself'. In professional and real-life chats, say 'I am' or 'My name is'—it sounds so poised! Now tell me: what is one thing you love most about ${citName}?`,
-            hindi: `अरे ${userName}, आपकी ऊर्जा बहुत अच्छी है! याद रखें: 'Myself' से वाक्य शुरू न करें, 'I am' या 'My name is' बोलें। बताइए: ${citName} की कौन सी बात आपको सबसे ज्यादा पसंद है?`
+            text: `Hello ${userName}, you have wonderful conversational energy! Remember our golden first-impression rule: never start with 'Myself'. In professional and real-life chats, always say 'I am' or 'My name is'—it sounds so poised and natural! What is one personal strength or passion you take pride in?`,
+            hindi: `नमस्ते ${userName}, आपकी ऊर्जा बहुत अच्छी है! याद रखें: 'Myself' से वाक्य शुरू न करें, 'I am' या 'My name is' बोलें। बताइए: वह कौन सी व्यक्तिगत ताकत है जिस पर आपको गर्व है?`
           };
         }
         return {
@@ -1606,7 +1587,7 @@ class ConversationEngine {
         if (cleanText.includes("yesterday i go") || cleanText.includes("take tea")) {
           return {
             emotion: "💡 Coaching & Guiding",
-            text: `Good effort, ${userName}! A quick conversational polish: say 'yesterday I went' and 'had some tea'. You're getting sharper every minute! Tell me, what do you usually enjoy doing on Sunday evenings?`,
+            text: `Good effort, ${userName}! A quick conversational polish: say 'yesterday I went' and 'had some tea'. You are getting sharper every minute! Tell me, what do you usually enjoy doing on Sunday evenings?`,
             hindi: `अच्छा प्रयास! 'yesterday I went' और 'had some tea' बोलें। आप हर मिनट बेहतर हो रहे हैं! रविवार की शाम को क्या करना पसंद करते हैं?`
           };
         }
@@ -1630,7 +1611,7 @@ class ConversationEngine {
       if (dayNum === 4) {
         return {
           emotion: "🌸 Warm & Relatable",
-          text: `Fantastic conversational Ping-Pong! Adding a personal detail and asking a question back keeps the energy alive! Riva loves chatting with you! Do you prefer traveling to historical places like ${citName} or relaxing in nature?`,
+          text: `Fantastic conversational Ping-Pong! Adding a thoughtful personal detail and asking a question back keeps the conversation lively and engaging. Aria loves chatting with you! Do you prefer exploring new cities and culture, or relaxing peacefully in nature?`,
           hindi: `कमाल का पिंग-पॉन्ग स्टाइल! अतिरिक्त जानकारी जोड़कर सवाल पूछने से बातचीत कभी खत्म नहीं होती!`
         };
       }
@@ -1672,7 +1653,7 @@ class ConversationEngine {
       const trans = this.translateHindiToEnglish(text);
       return {
         emotion: "🤗 Supportive & Caring",
-        text: `Koi baat nahi, ${userName}! In real life, thinking in Hindi is 100% natural. Here is how you say that in English with full confidence: "${trans.english}". Let's practice saying that together with good energy! How does that sound?`,
+        text: `Don't worry at all, ${userName}! It is completely natural to express your initial thoughts in your native language. In English, you can say that elegantly as: "${trans.english}". Let's practice saying that together with confidence! How does that sound?`,
         hindi: `कोई बात नहीं, ${userName}! इंग्लिश में आप ऐसे कह सकते हैं: "${trans.english}"। चलिए साथ में बोलकर अभ्यास करते हैं!`,
         translatedHint: trans.english
       };
@@ -1692,36 +1673,12 @@ class ConversationEngine {
       }
     }
 
-    // 2. Hometown & Cities (Chitkoot, Ayodhya, Varanasi, Lucknow, etc.)
-    if (cleanText.includes("chitkoot") || cleanText.includes("chitrakoot")) {
+    // 2. Travel, Culture & Memorable Experiences
+    if (cleanText.includes("travel") || cleanText.includes("trip") || cleanText.includes("visit") || cleanText.includes("vacation") || cleanText.includes("culture") || cleanText.includes("tour")) {
       return {
-        emotion: "🌸 Warm & Welcoming",
-        text: `Oh wow, Chitkoot! Chitkoot is such a peaceful, sacred town—famous for the holy Mandakini River, Kamadgiri, and tranquil ashrams. Living in ${citName} must give you such a calm and grounded perspective! In an interview, sharing that you are from Chitkoot makes an authentic personal impression. What is your favourite spot or memory there?`,
-        hindi: `अरे वाह, चित्रकूट! चित्रकूट मंदाकिनी नदी, कामदगिरि और शांत आश्रमों के लिए प्रसिद्ध एक बहुत ही पवित्र नगर है। ${citName} में रहना मन को बहुत शांति देता होगा! क्या आप अपना पसंदीदा स्थान बता सकते हैं?`
-      };
-    }
-
-    if (cleanText.includes("ayodhya") || cleanText.includes("ram mandir")) {
-      return {
-        emotion: "🌸 Warm & Reverent",
-        text: `Aha, Ayodhya carries such profound historical and spiritual grace on the banks of the Saryu River! Have you had the chance to witness the serene evening Aarti along the Ghats?`,
-        hindi: `अयोध्या सरयू नदी के तट पर स्थित एक गहरा आध्यात्मिक और ऐतिहासिक नगर है! क्या आपने सरयू घाटों पर शाम की आरती देखी है?`
-      };
-    }
-
-    if (cleanText.includes("varanasi") || cleanText.includes("banaras") || cleanText.includes("kashi")) {
-      return {
-        emotion: "🤩 Curious & Relatable",
-        text: `Oh, Varanasi is unforgettable! The ancient Ganga Ghats, the mesmerizing Maha Aarti at Dashashwamedh, and the vibrant morning energy are legendary. What do you love most about Banaras?`,
-        hindi: `वाराणसी वास्तव में अविस्मरणीय है! प्राचीन गंगा घाट, भव्य महाआरती और सुबह की ऊर्जा विश्व प्रसिद्ध है। आपको बनारस की कौन सी बात सबसे ज्यादा पसंद है?`
-      };
-    }
-
-    if (cleanText.includes("lucknow") || cleanText.includes("kanpur") || cleanText.includes("prayagraj") || cleanText.includes("delhi")) {
-      return {
-        emotion: "🌸 Warm & Friendly",
-        text: `That is such a culturally rich and vibrant region! The warmth, distinct heritage, and mouth-watering food make it so special. What is your favourite thing about that city?`,
-        hindi: `यह बहुत ही समृद्ध और जीवंत क्षेत्र है! वहाँ की संस्कृति, आतिथ्य और स्वादिष्ट व्यंजन बहुत खास हैं!`
+        emotion: "🌸 Warm & Relatable",
+        text: `${gentlePolish}Exploring new destinations and experiencing diverse cultures is always so enriching! It broadens our perspective and creates wonderful memories. What is a memorable place you have visited, or a destination you would love to travel to?`,
+        hindi: `${gentlePolish}नई जगहों की यात्रा करना और संस्कृतियों को देखना हमेशा बहुत समृद्ध अनुभव होता है! वह कौन सी यादगार जगह है जहाँ आप गए हैं या जाना चाहते हैं?`
       };
     }
 
@@ -1729,8 +1686,8 @@ class ConversationEngine {
     if (cleanText.includes("placement") || cleanText.includes("interview") || cleanText.includes("campus") || cleanText.includes("job") || cleanText.includes("recruiter")) {
       return {
         emotion: "💡 Placement Coach",
-        text: `${gentlePolish}Arey waah, ${userName}! Preparing for campus placements as a dedicated ${userProf === 'student' ? 'student' : 'candidate'} from ${citName} is a fantastic journey! Interviewers always look for two things: clarity of thought and honest confidence. If an HR interviewer asks: 'Tell me about a challenging project or problem you solved', what project comes to mind?`,
-        hindi: `${gentlePolish}अरे वाह, ${userName}! ${citName} से कैंपस प्लेसमेंट की तैयारी करना एक शानदार यात्रा है! इंटरव्यूअर्स दो चीजें देखते हैं: विचारों की स्पष्टता और ईमानदारी से आत्मविश्वास। अगर कोई पूछे कि आपने किस कठिन प्रोजेक्ट पर काम किया, तो आपका क्या जवाब होगा?`
+        text: `${gentlePolish}That is wonderful, ${userName}! Preparing for campus placements and professional interviews is such an important milestone. Interviewers always look for two essential qualities: clarity of thought and honest confidence. If an interviewer asks: 'Tell me about a challenging project or problem you solved', what experience comes to mind?`,
+        hindi: `${gentlePolish}शानदार, ${userName}! कैंपस प्लेसमेंट और इंटरव्यू की तैयारी एक बहुत महत्वपूर्ण कदम है! इंटरव्यूअर्स दो चीजें देखते हैं: विचारों की स्पष्टता और आत्मविश्वास। अगर कोई पूछे कि आपने किस कठिन प्रोजेक्ट पर काम किया, तो आपका क्या जवाब होगा?`
       };
     }
 
@@ -1738,17 +1695,17 @@ class ConversationEngine {
     if (cleanText.includes("project") || cleanText.includes("software") || cleanText.includes("code") || cleanText.includes("developer") || cleanText.includes("tech") || cleanText.includes("engineering")) {
       return {
         emotion: "🤩 Impressed & Curious",
-        text: `${gentlePolish}That sounds like a really exciting technical initiative! In campus interviews, explaining your project's problem statement and your personal role in simple English always impresses the technical panel. What was the most challenging feature you worked on?`,
-        hindi: `${gentlePolish}यह बहुत ही दिलचस्प तकनीकी प्रोजेक्ट लगता है! इंटरव्यू में प्रोजेक्ट की समस्या और अपनी भूमिका को सरल अंग्रेजी में समझाना बहुत प्रभावशाली होता है। इसमें सबसे चुनौतीपूर्ण हिस्सा क्या था?`
+        text: `${gentlePolish}That sounds like a really exciting technical initiative! In professional discussions, explaining your project's problem statement and your personal role in simple English always impresses the team. What was the most challenging feature you worked on?`,
+        hindi: `${gentlePolish}यह बहुत ही दिलचस्प प्रोजेक्ट लगता है! इंटरव्यू में प्रोजेक्ट की समस्या और अपनी भूमिका को सरल अंग्रेजी में समझाना बहुत प्रभावशाली होता है। इसमें सबसे चुनौतीपूर्ण हिस्सा क्या था?`
       };
     }
 
-    // 5. Tooti-Footi / Broken English & Overcoming Fear
+    // 5. Broken English & Overcoming Fear
     if (cleanText.includes("tooti") || cleanText.includes("broken") || cleanText.includes("hesitat") || cleanText.includes("fear") || cleanText.includes("darr") || cleanText.includes("sharam") || cleanText.includes("atak")) {
       return {
         emotion: "🤗 Supportive & Caring",
-        text: `Listen to me, ${userName}—never feel shy about broken English! In real life, communication is 90% confidence and heart, and only 10% grammar rules. You expressed your thought clearly, and I am super proud of you! Take a deep breath and tell me: what is one thing that made you feel happy today?`,
-        hindi: `मेरी बात सुनिए, ${userName}—टूटी-फूटी इंग्लिश से बिल्कुल मत झिझकिए! बातचीत का 90% हिस्सा आत्मविश्वास होता है और सिर्फ 10% व्याकरण। आपने अपनी बात साफ-साफ कही, और मुझे आप पर गर्व है! बताइए, आज किस बात ने आपको खुशी दी?`
+        text: `Listen to me, ${userName}—never feel shy or self-conscious about making mistakes! In real-world communication, 90% is genuine confidence and intent, while grammar is simply a skill that sharpens over time. You expressed your thought clearly, and I am proud of your effort! Take a deep breath and tell me: what is one thing that made you smile today?`,
+        hindi: `मेरी बात सुनिए, ${userName}—गलतियों से बिल्कुल मत झिझकिए! बातचीत का 90% हिस्सा आत्मविश्वास होता है और व्याकरण समय के साथ निखरता है। आपने अपनी बात साफ कही, और मुझे आप पर गर्व है! बताइए, आज किस बात ने आपको खुशी दी?`
       };
     }
 
@@ -1756,8 +1713,8 @@ class ConversationEngine {
     if (cleanText.includes("tea") || cleanText.includes("chai") || cleanText.includes("coffee") || cleanText.includes("breakfast") || cleanText.includes("eat") || cleanText.includes("food") || cleanText.includes("snack")) {
       return {
         emotion: "✨ Energized & Cheerful",
-        text: `${gentlePolish}Haha, yum! A hot cup of chai or refreshing breakfast is the perfect mood booster! In real life, discussing tea and food is the easiest icebreaker with colleagues and friends. Tell me, what do you usually like to do during your afternoons in ${citName}?`,
-        hindi: `${gentlePolish}वाह, क्या बात है! गर्म चाय या अच्छा नाश्ता मूड को तरोताजा कर देता है! दोस्तों और सहयोगियों के साथ बातचीत शुरू करने का यह सबसे आसान तरीका है। बताइए, दोपहर में आप आमतौर पर क्या करते हैं?`
+        text: `${gentlePolish}That sounds delightful! Taking a short pause for a hot cup of tea or a good snack is the perfect mood booster. In real life, chatting about food and daily routines is the most natural icebreaker with colleagues and friends. What do you usually enjoy doing during a relaxing afternoon break?`,
+        hindi: `${gentlePolish}वाह, बहुत बढ़िया! गर्म चाय या अच्छा नाश्ता मूड को तरोताजा कर देता है! दोस्तों और सहयोगियों के साथ बातचीत शुरू करने का यह सबसे आसान तरीका है। बताइए, दोपहर में आप आमतौर पर क्या करते हैं?`
       };
     }
 
@@ -1765,8 +1722,8 @@ class ConversationEngine {
     if (cleanText.includes("music") || cleanText.includes("song") || cleanText.includes("cricket") || cleanText.includes("movie") || cleanText.includes("hobby") || cleanText.includes("book") || cleanText.includes("read")) {
       return {
         emotion: "🌸 Warm & Relatable",
-        text: `${gentlePolish}Oh, I completely relate to that! Passionate hobbies give us fresh creative energy and keep us refreshed after long hours of studying. What kind of music or activities do you turn to when you want to feel inspired?`,
-        hindi: `${gentlePolish}अरे, मैं आपकी इस बात से पूरी तरह सहमत हूँ! अच्छे शौक हमें पढ़ाई के बाद नई ऊर्जा देते हैं। जब आपको प्रेरणा चाहिए होती है, तो आप क्या सुनना या करना पसंद करते हैं?`
+        text: `${gentlePolish}I completely relate to that! Passionate hobbies give us fresh creative energy and keep us refreshed after long hours of studying. What kind of music or activities do you turn to when you want to feel inspired?`,
+        hindi: `${gentlePolish}मैं आपकी इस बात से पूरी तरह सहमत हूँ! अच्छे शौक हमें पढ़ाई के बाद नई ऊर्जा देते हैं। जब आपको प्रेरणा चाहिए होती है, तो आप क्या सुनना या करना पसंद करते हैं?`
       };
     }
 
@@ -1774,8 +1731,8 @@ class ConversationEngine {
     if (cleanText.includes("hello") || cleanText.includes("hi") || cleanText.includes("hey") || cleanText.includes("name is") || cleanText.includes("i am")) {
       return {
         emotion: "🌸 Warm & Welcoming",
-        text: `Hello ${userName}! It is so lovely to hear your voice! Remember, with TalkRiva, we are training you like a real friend—step-by-step from ${userLevel === 'tooti-footi' ? 'tooti-footi English' : 'hesitation'} into fluent confidence. How are you feeling right now, and what would you like to chat about today?`,
-        hindi: `नमस्ते ${userName}! आपकी आवाज़ सुनकर बहुत अच्छा लगा! याद रखें, हम एक दोस्त की तरह आपको टूटी-फूटी इंग्लिश से पूरे आत्मविश्वास तक ट्रेन कर रहे हैं। आज आप कैसा महसूस कर रहे हैं?`
+        text: `Hello ${userName}! It is an absolute pleasure to hear your voice! Remember, with TalkRiva, we are practicing together like supportive friends—building your speaking confidence and natural fluency step-by-step. How are you feeling today, and what would you like to chat about?`,
+        hindi: `नमस्ते ${userName}! आपकी आवाज़ सुनकर बहुत अच्छा लगा! याद रखें, हम एक दोस्त की तरह आपको पूरे आत्मविश्वास तक ट्रेन कर रहे हैं। आज आप कैसा महसूस कर रहे हैं?`
       };
     }
 
@@ -1783,18 +1740,18 @@ class ConversationEngine {
     const realLifeExpressions = [
       {
         emotion: "🤩 Impressed & Proud",
-        text: `${gentlePolish}Oh wow, ${userName}! That was expressed with such great spirit and clarity! Tell me, what led you to think about that, and how does it fit into your daily goals in ${citName}?`,
-        hindi: `${gentlePolish}अरे वाह, ${userName}! आपने बहुत ही उत्साह और स्पष्टता से अपने विचार रखे! बताइए, इस बारे में आपने क्या सोचा और आपके क्या लक्ष्य हैं?`
+        text: `${gentlePolish}That is wonderful, ${userName}! You expressed that idea with great spirit and clear articulation! Tell me more about that perspective—what sparked that thought for you?`,
+        hindi: `${gentlePolish}वाह, बहुत बढ़िया, ${userName}! आपने बहुत उत्साह और स्पष्टता से अपने विचार रखे! इस बारे में और विस्तार से बताइए।`
       },
       {
         emotion: "🌸 Warm & Friendly",
-        text: `${gentlePolish}Acha, that makes so much sense! I love having real, authentic conversations with you. How would you explain that perspective to an interviewer or classmate in a couple of English sentences?`,
-        hindi: `${gentlePolish}अच्छा, यह बात बहुत सही है! मुझे आपसे बातचीत करना बहुत अच्छा लग रहा है। आप किसी इंटरव्यूअर या सहपाठी को यह बात अंग्रेजी में कैसे समझाएंगे?`
+        text: `${gentlePolish}That makes so much sense, ${userName}! I really enjoy having authentic conversations with you. How would you summarize that idea in a single, confident English sentence?`,
+        hindi: `${gentlePolish}यह बात बहुत सही है, ${userName}! मुझे आपसे बातचीत करना बहुत अच्छा लग रहा है। आप इसे एक संक्षिप्त अंग्रेजी वाक्य में कैसे समझाएंगे?`
       },
       {
         emotion: "✨ High Energy",
-        text: `${gentlePolish}Haha, that is fantastic! Your speaking rhythm is improving noticeably with every turn. What is another exciting topic or challenge you want to tackle next?`,
-        hindi: `${gentlePolish}वाह, यह तो बहुत बढ़िया है! हर बार बोलने के साथ आपकी गति और आत्मविश्वास बढ़ रहा है। अब आप किस विषय पर बात करना चाहेंगे?`
+        text: `${gentlePolish}That is fantastic! Your speaking rhythm and composure are improving noticeably with every turn. What is another exciting topic or challenge you want to tackle next?`,
+        hindi: `${gentlePolish}शानदार! हर बार बोलने के साथ आपकी गति और आत्मविश्वास बढ़ रहा है। अब आप किस विषय पर बात करना चाहेंगे?`
       }
     ];
 
@@ -1817,22 +1774,22 @@ class ConversationEngine {
 
     const phraseMap = [
       {
-        match: /हाँ.*(चित्रकूट|chitkoot|chitrakoot)|(चित्रकूट|chitkoot|chitrakoot).*(रहता|हूँ|se hoon|se hu)/i,
-        en: "Yes, I am from Chitkoot.",
-        phonetic: "Yes, eye am from Chit-koot.",
-        hi: "हाँ, मैं चित्रकूट से हूँ।"
+        match: /नमस्ते|namaste|hello|hi|मिलकर खुशी|glad to meet/i,
+        en: "Hello! It is truly a pleasure to connect with you.",
+        phonetic: "Huh-LOH! It iz TROO-lee uh PLEZH-er too kuh-NEKT with yoo.",
+        hi: "नमस्ते! आपसे जुड़कर वास्तव में बहुत खुशी हुई।"
       },
       {
-        match: /(जानते|जानती|know|pata).*(चित्रकूट|chitkoot|chitrakoot)|(चित्रकूट|chitkoot|chitrakoot).*(जानते|जानती|know|pata)/i,
-        en: "Do you know about Chitkoot? It is a historic and spiritual holy place.",
-        phonetic: "Doo yoo noh uh-bowt Chit-koot? It iz uh his-TOR-ik and SPIR-ih-choo-ul HOH-lee plays.",
-        hi: "क्या आप चित्रकूट के बारे में जानती हैं? यह एक ऐतिहासिक और पवित्र स्थान है।"
+        match: /सीखना|सिखाओ|practice|अभ्यास|speak.*english/i,
+        en: "I am actively practicing to speak English with confidence and clarity.",
+        phonetic: "Eye am AK-tiv-lee PRAK-tih-sing too speek ING-glish with KAHN-fih-dense and KLAIR-ih-tee.",
+        hi: "मैं आत्मविश्वास और स्पष्टता के साथ अंग्रेजी बोलने का सक्रिय अभ्यास कर रहा हूँ।"
       },
       {
-        match: /चित्रकूट|chitkoot|chitrakoot/i,
-        en: "Chitkoot is a beautiful, peaceful place with great historical significance.",
-        phonetic: "Chit-koot iz uh BYOO-tih-ful, PEES-ful plays with grayt his-TOR-ih-kul sig-NIF-ih-kuns.",
-        hi: "चित्रकूट एक सुंदर, शांत और ऐतिहासिक महत्व का स्थान है।"
+        match: /मदद|help|support|गाइड/i,
+        en: "Could you please guide me to improve my conversational English?",
+        phonetic: "Kood yoo pleez gyde mee too im-PROOV my kuhn-ver-SAY-shun-ul ING-glish?",
+        hi: "क्या आप मेरी बोलचाल की अंग्रेजी को सुधारने में मेरा मार्गदर्शन कर सकती हैं?"
       },
       {
         match: /डर.*(लग|रहा)|घबराहट|nervous|anxious/i,
@@ -1950,12 +1907,12 @@ class ConversationEngine {
       ];
     }
 
-    // E. City, Hometown, Where you live
-    if (cleanAi.includes("city") || cleanAi.includes("hometown") || cleanAi.includes("where do you live") || cleanAi.includes("where you live")) {
+    // E. Travel, Places & Leisure
+    if (cleanAi.includes("travel") || cleanAi.includes("destination") || cleanAi.includes("places") || cleanAi.includes("vacation")) {
       return [
-        `"I live in a peaceful city with warm and friendly people."`,
-        `"My hometown is famous for its rich culture and delicious street food."`,
-        `"It is a vibrant city with great historical heritage."`
+        `"I love exploring calm destinations surrounded by nature and rich culture."`,
+        `"Traveling helps me relax and gain fresh, inspiring perspectives."`,
+        `"I enjoy visiting historical landmarks and learning about their heritage."`
       ];
     }
 

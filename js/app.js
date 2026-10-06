@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // App State
   const state = {
     userName: engine.memory.data.profile.name || '',
-    userCity: engine.memory.data.profile.city || (typeof localStorage !== 'undefined' ? (localStorage.getItem('talkriva_user_city') || '') : ''),
     userLevel: engine.memory.data.profile.level || 'tooti-footi',
     userGoal: engine.memory.data.profile.goal || 'job-interview',
     userProfession: engine.memory.data.profile.profession || 'student',
@@ -45,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Portal Form & Returning Banner
     portalForm: document.getElementById('portal-form'),
     userNameInput: document.getElementById('user-name-input'),
-    userCityInput: document.getElementById('user-city-input'),
     portalReturningBanner: document.getElementById('portal-returning-banner'),
     portalReturningName: document.getElementById('portal-returning-name'),
     portalReturningDetail: document.getElementById('portal-returning-detail'),
@@ -55,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
     dashUserDisplayName: document.getElementById('dash-user-display-name'),
     dashLevelBadge: document.getElementById('dash-level-badge'),
     dashGoalBadge: document.getElementById('dash-goal-badge'),
-    dashCityBadge: document.getElementById('dash-city-badge'),
     ariaPersonalizedGreeting: document.getElementById('aria-personalized-greeting'),
     openMemoryModalBtn: document.getElementById('open-memory-modal-btn'),
     openMistakesFromDashBtn: document.getElementById('open-mistakes-from-dash-btn'),
@@ -244,8 +241,16 @@ document.addEventListener('DOMContentLoaded', () => {
    * ======================================================================== */
   dom.portalForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = dom.userNameInput.value.trim();
-    const city = (dom.userCityInput ? dom.userCityInput.value : (document.getElementById('user-city-input')?.value || '')).trim();
+    const rawName = dom.userNameInput ? dom.userNameInput.value : (document.getElementById('user-name-input')?.value || '');
+    const name = rawName.trim();
+
+    if (!name) {
+      if (dom.userNameInput) {
+        dom.userNameInput.focus();
+        dom.userNameInput.setAttribute('placeholder', 'Please enter your name first!');
+      }
+      return;
+    }
 
     const selectedLevelEl = document.querySelector('input[name="english-level"]:checked');
     const level = selectedLevelEl ? selectedLevelEl.value : 'tooti-footi';
@@ -256,19 +261,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedProfEl = document.querySelector('input[name="user-profession"]:checked');
     const profession = selectedProfEl ? selectedProfEl.value : 'student';
 
-    if (!name) return;
-
     state.userName = name;
-    state.userCity = city;
     state.userLevel = level;
     state.userGoal = goal;
     state.userProfession = profession;
 
-    engine.memory.updateProfile({ name, city, level, goal, profession });
+    try {
+      localStorage.setItem('talkriva_user_name', name);
+      localStorage.setItem('talkriva_user_level', level);
+      localStorage.setItem('talkriva_user_goal', goal);
+      localStorage.setItem('talkriva_user_profession', profession);
+    } catch (_) {}
+
+    engine.memory.updateProfile({ name, level, goal, profession });
 
     speech.playChime('success');
     showScreen('dashboard');
   });
+
+  // Quick continue button for returning user
+  if (dom.portalQuickContinueBtn) {
+    dom.portalQuickContinueBtn.addEventListener('click', () => {
+      speech.playChime('success');
+      showScreen('dashboard');
+    });
+  }
 
   // Radio button active styling handlers
   document.querySelectorAll('.assessment-radio-label input').forEach(radio => {
@@ -310,19 +327,15 @@ document.addEventListener('DOMContentLoaded', () => {
           'abroad-travel': 'Abroad Studies & Travel'
         };
         const levelNames = {
-          'tooti-footi': 'Tooti-Footi English',
+          'tooti-footi': 'Beginner Level',
           'hesitant': 'Hesitant',
           'intermediate': 'Intermediate',
           'advanced': 'Advanced'
         };
-        const locationText = state.userCity ? `${state.userCity} · ` : '';
-        dom.portalReturningDetail.textContent = `Aapka data saved hai: ${locationText}${goalNames[state.userGoal] || state.userGoal} (${levelNames[state.userLevel] || state.userLevel})`;
+        dom.portalReturningDetail.textContent = `Profile Saved: ${goalNames[state.userGoal] || state.userGoal} · ${levelNames[state.userLevel] || state.userLevel}`;
       }
       if (dom.userNameInput) {
         dom.userNameInput.value = state.userName;
-      }
-      if (dom.userCityInput) {
-        dom.userCityInput.value = state.userCity || engine.memory.data.profile.city || '';
       }
 
       // Check corresponding radio for level
@@ -387,12 +400,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateDashboardData() {
     dom.dashUserDisplayName.textContent = state.userName || 'Learner';
 
-    if (dom.dashCityBadge) {
-      dom.dashCityBadge.textContent = state.userCity ? `📍 ${state.userCity}` : '📍 Chitkoot';
-    }
-
     const levelDescriptions = {
-      'tooti-footi': '🐣 Level 1: Tooti-Footi to Clear Speech',
+      'tooti-footi': '🐣 Level 1: Step-by-Step Speech Foundations',
       'hesitant': '💬 Level 2: Hesitation Removal & Natural Flow',
       'intermediate': '🌿 Level 3: Conversational Fluency & Confidence',
       'advanced': '🎯 Level 4: Advanced Professional & Interview Mastery'
@@ -407,12 +416,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     dom.dashGoalBadge.textContent = goalLabels[state.userGoal] || '💼 Goal: Spoken English';
 
-    const cityGreetingPart = state.userCity ? ` (${state.userCity})` : '';
     const greetings = {
-      'tooti-footi': `"Hello ${state.userName}${cityGreetingPart}! बिल्कुल फ़िक्र मत कीजिए। आपका प्रोफाइल सेव हो गया है। हम टूटी-फूटी इंग्लिश से शुरू करेंगे, रोज़ Real-Life Practice करेंगे और आपको कैंपस प्लेसमेंट और दैनिक बातचीत में पूरे आत्मविश्वास से फ्लूएंट बनाएंगे।"`,
-      'hesitant': `"Hello ${state.userName}${cityGreetingPart}! झिझकना छोड़ दीजिए—आरिया के साथ रोज़ बात करके और अभ्यास से आपकी हिचकिचाहट पूरी तरह खत्म हो जाएगी।"`,
-      'intermediate': `"Hello ${state.userName}${cityGreetingPart}! चलिए आपकी वोकैबुलरी, डिप्लोमेटिक इंग्लिश और बातचीत की गति को नेटिव स्तर पर ले जाते हैं।"`,
-      'advanced': `"Hello ${state.userName}${cityGreetingPart}! Let's master the STAR method, elevator pitch, and crack your interviews together."`
+      'tooti-footi': `"Hello ${state.userName}! Welcome to your spoken English journey. Never worry about making mistakes—every single conversation builds your confidence, vocabulary, and natural spoken rhythm. Let's practice speaking with joy today!"`,
+      'hesitant': `"Hello ${state.userName}! Welcome back. It is time to let go of hesitation. By speaking with Aria every day in real-life scenarios, your words will begin to flow smoothly, clearly, and effortlessly."`,
+      'intermediate': `"Hello ${state.userName}! It is fantastic to see you. Let's elevate your vocabulary, master natural phrasing, and build the polished fluency needed for professional and daily success."`,
+      'advanced': `"Hello ${state.userName}! Welcome to advanced mastery. Let's sharpen your STAR interview technique, executive presentation skills, and high-impact conversational eloquence together."`
     };
     dom.ariaPersonalizedGreeting.textContent = greetings[state.userLevel] || greetings['tooti-footi'];
 
@@ -888,7 +896,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } else {
       // CASE B: Dynamic Free Conversational Session tailored to saved profile
-      const dynamicStarter = engine.getDynamicStarter(state.userName, state.userLevel, state.userGoal, state.userCity, state.userProfession);
+      const dynamicStarter = engine.getDynamicStarter(state.userName, state.userLevel, state.userGoal, state.userProfession);
       starterText = dynamicStarter.text;
       starterHindi = dynamicStarter.hindi;
       starterEmotion = dynamicStarter.emotion || "🌸 Warm & Welcoming";

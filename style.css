@@ -388,15 +388,7 @@ html, body {
   padding: 2px 8px;
   border-radius: var(--radius-full);
 }
-.dash-city-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.25);
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-}
+
 
 .riva-mood-badge {
   display: inline-flex;
